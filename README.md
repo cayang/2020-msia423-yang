@@ -1,4 +1,88 @@
-# MSiA423 Template Repository
+# Increasing Engagement in the Chicago Homestays Marketplace
+Developer: Catherine Yang  
+QA support: Thomas Kuo
+
+## Project Charter
+
+### Background
+
+ With the rise of the sharing economy, homestays have become an increasingly popular lodging option for short-term stays and short-term rentals. [Airbnb] (https://www.airbnb.com/) is a platform that provides an online marketplace for hosts to list their accommodations and for guests to book such homestays. Encouraging growth in the homestays marketplace benefits both guests, who can seek a wider variety of alternative options for lodging, as well as hosts, who can earn income through renting out their listings.
+
+### Vision
+
+To increase user engagement on the Airbnb platform (users referring to both hosts and guests), and to grow the homestays market in the Chicago area, particularly on the Airbnb platform.
+
+### Mission
+
+To provide the tools and infrastructure that would help:
+- Understand the features driving the number reviews per month (used as a proxy for measuring booking activity and overall user engagement) for a particular listing. 
+- Predict the number of reviews per month a listing will receive, based on features pertaining to its host, accommodation, and booking process. A variety of regression models will be tried and evaluated for predictive performance in order to select the most optimal model.
+
+This serves a twofold purpose for guests and hosts. For guests, more reviews would generate greater user interaction with the platform and can inform future prospective guests' boooking decisions. This will lead to the acquisition of new users and increase bookings within existing user base. For hosts, providing insight into attributes driving increased reviews (and bookings) will help lead to growth in the number of hosts and listings on the Airbnb platform, as well as help optimize hospitality for existing listings.
+
+Data source: [Airbnb listing-level data] (http://insideairbnb.com/get-the-data.html) for the Chicago area (updated every month)
+
+### Success Criteria
+
+1. **Model Performance Metric**: 
+    - MSE - Desired MSE prior to model deployment: ***< 0.25*** (i.e., we want the predicted reviews per month should be within 0.5 of the actual reviews per month, on average across all listings, in order to provide prospective hosts with an reasonably accurate assessment). 
+
+2. **Business Metrics**:
+    - % Increase in average reviews per month per listing, across all listings, month over month
+    - % Increase in total listings, month over month
+    - % Increase in number of unique hosts, month over month
+
+### Plan
+
+#### Initiative 1: Develop Underlying Model and Web-app Infrastructure (Solution Prototype)
+- **Epic 1**: Develop Initial Predictive Model (Train Model Object)
+  - Story 1: Obtain, clean, and prepare dataset in format required for model ingestion - PLANNED
+  - Story 2: Asses dataset features, perform transformations as needed, and select features for predictive model - PLANNED
+  - Story 3: Build predictive model(s) - linear & penalized regressions (Lasso, Elastic Net), random forest, boosted tree, neural network - and compare predictive performance to select best model type - PLANNED
+  - Story 4: Tune best model type to obtain trained model object - PLANNED
+- **Epic 2**: Develop Webapp Infrastructure
+  - Story 1: Develop front-end input and features - PLANNED
+  - Story 2: Integrate model output with Flask application - PLANNED
+- **Epic 3**: Refine Predictive Model by Testing New Features and Feature Selection Methodologies
+  - Story 1: (Specific tasks to be further defined at a later time) - ICEBOX
+- **Epic 4**: Refine Predictive Model by Testing Different Model Types
+  - Story 1: (Specific tasks to be further defined at a later time) - ICEBOX
+- **Epic 5**: Refine Flask application interface for more optimal user experience
+  - Story 1: (Specific tasks to be further defined at a later time) - ICEBOX
+
+#### Initiative 2: Develop Data Infrastructure for Web-app Deployment
+- **Epic 1**: Build Data Acquisition Pipeline
+  - Story 1: Develop scripts that ingest data from source and produce raw data files - PLANNED
+  - Story 2: Develop scripts that create local database schema - PLANNED
+  - Story 3: Integrate data pipeline with feature pipeline and model training process - PLANNED
+  - Story 4: Conduct appropriate tests to ensure performance is as expected - PLANNED
+- **Epic 2**: Optimize Data Pipeline with Alternative Acquisition and Storage
+  - Story 1: (Specific tasks to be further defined at a later time) - ICEBOX
+
+### Backlog
+
+- Initiative1.epic1.story1 (small) - PLANNED
+- Initiative1.epic1.story2 (medium) - PLANNED
+- Initiative1.epic1.story3 (big) - PLANNED
+- Initiative1.epic1.story4 (medium) - PLANNED
+- Initiative1.epic2.story1 (medium) - PLANNED
+- Initiative1.epic2.story2 (large) - PLANNED
+- Initiative2.epic1.story1 (large) - PLANNED
+- Initiative2.epic1.story2 (medium) - PLANNED
+- Initiative2.epic1.story3 (medium) - PLANNED
+- Initiative2.epic1.story4 (medium) - PLANNED
+ 
+Sizing: small < medium < large < big
+
+### Icebox
+- Initiative1.epic3 
+- Initiative1.epic4
+- Initiative1.epic5
+- Initiative2.epic2
+
+---
+
+## Project Repository
 
 <!-- toc -->
 
