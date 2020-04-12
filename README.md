@@ -6,7 +6,7 @@ QA support: Thomas Kuo
 
 ### Background
 
- With the rise of the sharing economy, homestays have become an increasingly popular lodging option for short-term stays and short-term rentals. [Airbnb] (https://www.airbnb.com/) is a platform that provides an online marketplace for hosts to list their accommodations and for guests to book such homestays. Encouraging growth in the homestays marketplace benefits both guests, who can seek a wider variety of alternative options for lodging, as well as hosts, who can earn income through renting out their listings.
+ With the rise of the sharing economy, homestays have become an increasingly popular lodging option for short-term stays and short-term rentals. [Airbnb](https://www.airbnb.com/) is a platform that provides an online marketplace for hosts to list their accommodations and for guests to book such homestays. Encouraging growth in the homestays marketplace benefits both guests, who can seek a wider variety of alternative options for lodging, as well as hosts, who can earn income through renting out their listings.
 
 ### Vision
 
@@ -20,7 +20,7 @@ To provide the tools and infrastructure that would help:
 
 This serves a twofold purpose for guests and hosts. For guests, more reviews would generate greater user interaction with the platform and can inform future prospective guests' boooking decisions. This will lead to the acquisition of new users and increase bookings within existing user base. For hosts, providing insight into attributes driving increased reviews (and bookings) will help lead to growth in the number of hosts and listings on the Airbnb platform, as well as help optimize hospitality for existing listings.
 
-Data source: [Airbnb listing-level data] (http://insideairbnb.com/get-the-data.html) for the Chicago area (updated every month)
+Data source: [Airbnb listing-level data](http://insideairbnb.com/get-the-data.html) for the Chicago area (updated every month)
 
 ### Success Criteria
 
