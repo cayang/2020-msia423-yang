@@ -143,7 +143,7 @@ Sizing: small < medium < large < big
 │
 ├── src/                              <- Source data for the project 
 │   ├── clean_data.py                 <- Gets raw data from S3 bucket and cleans file.
-│   ├── create_db.py                  <- Creates database schema to create table for data obtained after feature selection.
+│   ├── create_db.py                  <- Creates database schema (RDS or SQLite) and tables for data obtained after feature selection.
 │   ├── generate_features.py          <- Creates and selects features from cleaned data in preparation for model training.
 │   ├── ingest_data.py                <- Ingests data from source and uploads raw data to S3 bucket.
 │
@@ -173,13 +173,13 @@ export MYSQL_PORT=<your-MySQL-port>
 
 **Running in Docker**
 
-Create a file called `config.env` file within the `config/` path. This file will contain your AWS credentials to access the S3 bucket, as well as your MySQL credentials for accessing the database. The following environment variables will be exported to the Docker container when the scripts are executed:
-- AWS_SECRET_ACCESS_KEY
-- AWS_ACCESS_KEY_ID
-- MYSQL_USER
-- MYSQL_PASSWORD
-- MYSQL_HOST
-- MYSQL_PORT
+Create a file called `config.env` file within the `config/` path. This file will contain your AWS credentials to access the S3 bucket, as well as your MySQL credentials for accessing the RDS table. The following environment variables will be exported to the Docker container when the scripts are executed:
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_ACCESS_KEY_ID`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+- `MYSQL_HOST`
+- `MYSQL_PORT`
 
 To create the `config.env` file, from the root directory, run:
 ```bash
@@ -202,7 +202,7 @@ MYSQL_PORT=<your-MySQL-port>
 
 **RDS**
 
-To change the RDS database to write the table to, modify `RDS: DATABASE` in the `config/modelconfig.yml` file. Default database is:
+To change the RDS database name, modify `RDS: DATABASE` in the `config/modelconfig.yml` file. Default database is:
 ```yml
 RDS:
     DATABASE: airbnbchi_db
@@ -223,7 +223,7 @@ All scripts should be executed by running `python run.py <arg>` in the root of t
 
 ### 1. Initialize the database schema
 
-To create the database (default location is in RDS), run:
+To create the database (default location is RDS), run:
 ```bash
 python run.py create_db
 ```
@@ -274,7 +274,7 @@ This command builds the Docker image, with the tag `airbnbchi`, based on the ins
 
 ### 2. Run model pipeline scripts
 
-First, ensure that the `config.env` file is created in the `config/` path. Instructions for creating this file [here](#1-configure-environment-variables)
+First, ensure that the `config.env` file is created in the `config/` path. Instructions for creating this file are referenced in the section [Configure environment variables](#1-configure-environment-variables).
 
 To run the model pipeline scripts, run:
 ```bash
@@ -297,7 +297,7 @@ docker run --env-file=config/config.env --mount type=bind,source=$(pwd)/data,tar
 
 ## Running MySQL in Command Line (Optional)
 
-Once the RDS table has been created, you can access the MySQL database via the command line in a Docker container. 
+Once the RDS table has been created, you can access the database via MySQL in the command line. 
 
 ### 1. Configure MySQL environment variables
 
@@ -311,7 +311,7 @@ First, configure environment variables by either:
     export MYSQL_PORT=<your-MySQL-port>
     ```
 
-2.  Creating a `.mysqlconfig` file in the root of the repository to store the code above:
+2.  Creating a `.mysqlconfig` file via command `vi .mysqlconfig` in the root of the repository to store the code above:
 
     ```bash
     export MYSQL_USER=<your-MySQL-user>
