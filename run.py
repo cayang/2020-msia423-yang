@@ -1,30 +1,77 @@
 import argparse
 
-from src.add_songs import create_db, add_track
+import config
+from src.ingest_data import run_ingest_data
+from src.clean_data import run_clean_data
+from src.generate_features import run_generate_features
+from src.create_db import run_create_db
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    # Add parsers for both creating a database and adding songs to it
-    parser = argparse.ArgumentParser(description="Create and/or add data to database")
+    # Add parsers for all functions in the pipeline
+    parser = argparse.ArgumentParser(description="Run model pipeline code")
     subparsers = parser.add_subparsers()
 
-    # Sub-parser for creating a database
-    sb_create = subparsers.add_parser("create_db", description="Create database")
-    sb_create.add_argument("--artist", default="Britney Spears", help="Artist of song to be added")
-    sb_create.add_argument("--title", default="Radar", help="Title of song to be added")
-    sb_create.add_argument("--album", default="Circus", help="Album of song being added.")
-    sb_create.add_argument("--engine_string", default='sqlite:///data/tracks.db',
-                           help="SQLAlchemy connection URI for database")
-    sb_create.set_defaults(func=create_db)
+    # Sub-parser for ingesting data from source
+    sb_ingest = subparsers.add_parser(
+        "ingest", description="Ingest data from web source and upload raw file to S3."
+    )
+    sb_ingest.add_argument(
+        "--config", default=config.YAML_CONFIG, help="Location of configuration YAML"
+    )
+    sb_ingest.add_argument(
+        "--url", default=config.URL_LISTINGS, help="URL of source data"
+    )
+    sb_ingest.set_defaults(func=run_ingest_data)
 
-    # Sub-parser for ingesting new data
-    sb_ingest = subparsers.add_parser("ingest", description="Add data to database")
-    sb_ingest.add_argument("--artist", default="Emancipator", help="Artist of song to be added")
-    sb_ingest.add_argument("--title", default="Minor Cause", help="Title of song to be added")
-    sb_ingest.add_argument("--album", default="Dusk to Dawn", help="Album of song being added")
-    sb_ingest.add_argument("--engine_string", default='sqlite:///data/tracks.db',
-                           help="SQLAlchemy connection URI for database")
-    sb_ingest.set_defaults(func=add_track)
+    # Sub-parser for cleaning data
+    sb_clean = subparsers.add_parser(
+        "clean", description="Get raw data from S3, clean data, and save as CSV.",
+    )
+    sb_clean.add_argument(
+        "--config", default=config.YAML_CONFIG, help="Location of configuration YAML"
+    )
+    sb_clean.add_argument(
+        "--data_file_raw", default=None, help="Location of the raw data file"
+    )
+    sb_clean.add_argument(
+        "--keep_raw",
+        default=True,
+        type=bool,
+        help="Specifies whether to retain raw data file on local filesystem",
+    )
+    sb_clean.set_defaults(func=run_clean_data)
+
+    # Sub-parser for generating features
+    sb_features = subparsers.add_parser(
+        "features",
+        description="Generates and selects a subset of features in prepration for training the model.",
+    )
+    sb_features.add_argument(
+        "--config", default=config.YAML_CONFIG, help="Location of configuration YAML"
+    )
+    sb_features.add_argument(
+        "--select_features",
+        default=False,
+        type=bool,
+        help="Specifies whether to manually specify features to keep",
+    )
+    sb_features.set_defaults(func=run_generate_features)
+
+    # Sub-parser for uploading data to database
+    sb_create_db = subparsers.add_parser(
+        "create_db", description="Creates a database to store feature data."
+    )
+    sb_create_db.add_argument(
+        "--config", default=config.YAML_CONFIG, help="Location of configuration YAML"
+    )
+    sb_create_db.add_argument(
+        "--local",
+        default=False,
+        type=bool,
+        help="Creates SQL Lite database locally, if true (defaults to False)",
+    )
+    sb_create_db.set_defaults(func=run_create_db)
 
     args = parser.parse_args()
     args.func(args)
