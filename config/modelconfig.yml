@@ -1,0 +1,95 @@
+model:
+    name: airbnbchi
+    author: Catherine Yang
+    version: 1
+    description: Predicts the number of reviews
+    dependencies: requirements.txt
+S3:
+    S3_BUCKET: nw-msia423-project-yang
+    S3_OBJECT: data/listings-raw.csv
+RDS:
+    DATABASE: airbnbchi_db
+ingest_data:
+    ZIP_FILE_NAME: listings.csv.gz
+clean_data:
+    LISTING_DTYPES:
+        zipcode: str
+        price: str
+        weekly_price: str
+        monthly_price: str
+        security_deposit: str
+        cleaning_fee: str
+    # Columns to drop from the raw data
+    DROP_COLS:
+        - listing_url
+        - scrape_id
+        - last_scraped
+        - experiences_offered
+        - thumbnail_url
+        - medium_url
+        - picture_url
+        - xl_picture_url
+        - host_thumbnail_url
+        - host_picture_url
+        - smart_location
+        - calendar_last_scraped
+        - license
+        - host_url
+        - requires_license
+        - has_availability
+        - jurisdiction_names
+        - city
+        - state
+        - neighbourhood
+        - neighbourhood_group_cleansed
+        - street
+        - market
+        - country_code
+        - country
+        - calculated_host_listings_count
+        - calculated_host_listings_count_entire_homes
+        - calculated_host_listings_count_private_rooms
+        - calculated_host_listings_count_shared_rooms
+generate_features:
+    # Entire host features subset
+    FEATURES_HOST:
+        - host_since_years
+        - host_response_time
+        - host_response_rate
+        - host_is_superhost
+        - host_listings_count
+        - host_has_profile_pic
+        - host_identity_verified
+    # Entire property features subset
+    FEATURES_PROP:
+        - is_location_exact
+        - property_type_cat
+        - room_type
+        - accommodates_cat
+        - bathrooms_cat
+        - bedrooms_cat
+        - beds_cat
+        - bed_type_cat
+        - amenities_count
+        - price
+        - security_deposit
+        - cleaning_fee
+        - guests_included_cat
+        - extra_people_cat
+        - neighbourhood_group
+    # Entire booking features subset
+    FEATURES_BOOKING:
+        - min_nights_cat
+        - max_nights_cat
+        - instant_bookable
+        - cancellation_policy
+        - require_guest_profile_picture
+        - require_guest_phone_verification
+    # Manually selected features from entire feature subset
+    SELECT_FEATURES:
+
+
+
+    
+
+    
