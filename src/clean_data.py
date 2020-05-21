@@ -12,6 +12,8 @@ from botocore.exceptions import ClientError
 from config import (
     HOME,
     YAML_CONFIG,
+    S3_BUCKET,
+    S3_OBJECT,
     DATA_FILENAME_RAW,
     DATA_FILENAME_NEIGHBORHOOD,
     DATA_FILENAME_CLEAN,
@@ -29,16 +31,14 @@ def run_clean_data(args):
     """
 
     # Load configs from yml file
-    with open(args.config, "r") as f:
+    with open(YAML_CONFIG, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-        s3_filename = config["S3"]["S3_OBJECT"]
-        bucket = config["S3"]["S3_BUCKET"]
         listing_dtypes = config["clean_data"]["LISTING_DTYPES"]
         drop_cols = config["clean_data"]["DROP_COLS"]
 
     # If not data file specified, download from S3 then read in raw data
     if args.data_file_raw is None:
-        read_from_s3(s3_filename, bucket, str(DATA_FILENAME_RAW))
+        read_from_s3(S3_OBJECT, S3_BUCKET, str(DATA_FILENAME_RAW))
 
     # Read in data from CSV
     df = pd.read_csv(DATA_FILENAME_RAW, na_values=["NaN", "N/A"], dtype=listing_dtypes)
@@ -127,13 +127,11 @@ if __name__ == "__main__":
         "clean", description="Get raw data from S3, clean data, and save as CSV.",
     )
     sb_clean.add_argument(
-        "--config", default=YAML_CONFIG, help="Location of configuration YAML"
-    )
-    sb_clean.add_argument(
-        "--data_file_raw", default=None, help="Location of the raw data file"
+        "--data_file_raw", "-df", default=None, help="Location of the raw data file"
     )
     sb_clean.add_argument(
         "--keep_raw",
+        "-k",
         default=True,
         type=bool,
         help="Specifies whether to retain raw data file on local filesystem",

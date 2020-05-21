@@ -24,7 +24,7 @@ def run_generate_features(args):
     """
 
     # Load in configs from yml file
-    with open(args.config, "r") as f:
+    with open(YAML_CONFIG, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         FEATURES_HOST = config["generate_features"]["FEATURES_HOST"]
         FEATURES_PROP = config["generate_features"]["FEATURES_PROP"]
@@ -189,9 +189,9 @@ def create_booking_features(df):
 
     # Create new variable to categorize maximum_nights
     df.loc[:, "max_nights_cat"] = df["maximum_nights"]
-    df.loc[df["maximum_nights"] <= 30, "max_nights_cat"] = 1
+    df.loc[df["maximum_nights"] < 30, "max_nights_cat"] = 1
     df.loc[
-        (df["maximum_nights"] > 30) & (df["maximum_nights"] < 365), "max_nights_cat",
+        (df["maximum_nights"] >= 30) & (df["maximum_nights"] < 365), "max_nights_cat",
     ] = 2
     df.loc[df["maximum_nights"] >= 365, "max_nights_cat"] = 3
 
@@ -210,10 +210,8 @@ if __name__ == "__main__":
         description="Generates and selects a subset of features in prepration for training the model.",
     )
     sb_features.add_argument(
-        "--config", default=YAML_CONFIG, help="Location of configuration YAML"
-    )
-    sb_features.add_argument(
         "--select_features",
+        "-s",
         default=False,
         type=bool,
         help="Specifies whether to manually specify features to keep",

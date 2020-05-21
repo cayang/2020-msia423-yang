@@ -13,6 +13,8 @@ from config import (
     HOME,
     URL_LISTINGS,
     YAML_CONFIG,
+    S3_BUCKET,
+    S3_OBJECT,
     DATA_PATH,
     DATA_FILENAME_RAW,
     PULL_DATE,
@@ -29,10 +31,8 @@ def run_ingest_data(args):
     """
 
     # Load in configs from yml file
-    with open(args.config, "r") as f:
+    with open(YAML_CONFIG, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-        bucket = config["S3"]["S3_BUCKET"]
-        object_name = config["S3"]["S3_OBJECT"]
         zip_file_name = config["ingest_data"]["ZIP_FILE_NAME"]
 
     # Import data
@@ -40,7 +40,7 @@ def run_ingest_data(args):
 
     # Upload to S3
     upload_to_s3(
-        str(DATA_FILENAME_RAW), bucket, object_name,
+        str(DATA_FILENAME_RAW), S3_BUCKET, S3_OBJECT,
     )
 
     # Remove raw data file
@@ -89,9 +89,9 @@ def upload_to_s3(file_name, bucket, object_name=None):
         object_name = file_name
 
     # Upload the file
-    # REVIEW: May not need key
     s3_client = boto3.client("s3")
     try:
+        # TODO: Add response when adding logging
         s3_client.upload_file(file_name, bucket, object_name)
     except ClientError as e:
         logging.error(e)
@@ -110,9 +110,8 @@ if __name__ == "__main__":
         "ingest", description="Ingest data from web source and upload raw file to S3."
     )
     sb_ingest.add_argument(
-        "--config", default=YAML_CONFIG, help="Location of configuration YAML"
+        "--url", "-u", default=URL_LISTINGS, help="URL of source data"
     )
-    sb_ingest.add_argument("--url", default=URL_LISTINGS, help="URL of source data")
     sb_ingest.set_defaults(func=run_ingest_data)
 
     args = parser.parse_args()

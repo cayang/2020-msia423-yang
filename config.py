@@ -22,6 +22,13 @@ URL_LISTINGS = (
     + "/data/listings.csv.gz"
 )
 
+# S3 Bucket configs
+S3_BUCKET = "nw-msia423-project-yang"
+S3_OBJECT = "data/listings-raw.csv"
+
+# RDS configs
+RDS_DATABASE = "airbnbchi_db"
+
 # Local data filepaths
 DATA_PATH = HOME / "data"
 DATA_FILENAME_RAW = DATA_PATH / (

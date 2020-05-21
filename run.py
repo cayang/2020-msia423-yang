@@ -17,10 +17,7 @@ if __name__ == "__main__":
         "ingest", description="Ingest data from web source and upload raw file to S3."
     )
     sb_ingest.add_argument(
-        "--config", default=config.YAML_CONFIG, help="Location of configuration YAML"
-    )
-    sb_ingest.add_argument(
-        "--url", default=config.URL_LISTINGS, help="URL of source data"
+        "--url", "-u", default=config.URL_LISTINGS, help="URL of source data"
     )
     sb_ingest.set_defaults(func=run_ingest_data)
 
@@ -29,13 +26,11 @@ if __name__ == "__main__":
         "clean", description="Get raw data from S3, clean data, and save as CSV.",
     )
     sb_clean.add_argument(
-        "--config", default=config.YAML_CONFIG, help="Location of configuration YAML"
-    )
-    sb_clean.add_argument(
-        "--data_file_raw", default=None, help="Location of the raw data file"
+        "--data_file_raw", "-df", default=None, help="Location of the raw data file"
     )
     sb_clean.add_argument(
         "--keep_raw",
+        "-k",
         default=True,
         type=bool,
         help="Specifies whether to retain raw data file on local filesystem",
@@ -48,10 +43,8 @@ if __name__ == "__main__":
         description="Generates and selects a subset of features in prepration for training the model.",
     )
     sb_features.add_argument(
-        "--config", default=config.YAML_CONFIG, help="Location of configuration YAML"
-    )
-    sb_features.add_argument(
         "--select_features",
+        "-s",
         default=False,
         type=bool,
         help="Specifies whether to manually specify features to keep",
@@ -63,10 +56,8 @@ if __name__ == "__main__":
         "create_db", description="Creates a database to store feature data."
     )
     sb_create_db.add_argument(
-        "--config", default=config.YAML_CONFIG, help="Location of configuration YAML"
-    )
-    sb_create_db.add_argument(
         "--local",
+        "-l",
         default=False,
         type=bool,
         help="Creates SQL Lite database locally, if true (defaults to False)",

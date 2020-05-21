@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, Numeric, Boolean
 import yaml
 
-from config import YAML_CONFIG, DATABASE_PATH
+from config import DATABASE_PATH, RDS_DATABASE
 
 Base = declarative_base()
 
@@ -59,10 +59,6 @@ def run_create_db(args):
             - local: specification of whether to create local SQLite table RDS table
     """
 
-    with open(args.config, "r") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-        rds_database = config["RDS"]["DATABASE"]
-
     if args.local == True:
         engine_string = "sqlite:////{}".format(DATABASE_PATH)
     else:
@@ -73,7 +69,7 @@ def run_create_db(args):
         port = os.environ.get("MYSQL_PORT")
 
         engine_string = "{}://{}:{}@{}:{}/{}".format(
-            conn, user, password, host, port, rds_database
+            conn, user, password, host, port, RDS_DATABASE
         )
 
     create_db(engine_string)
@@ -119,10 +115,8 @@ if __name__ == "__main__":
         "create_db", description="Creates a database to store feature data."
     )
     sb_create_db.add_argument(
-        "--config", default=YAML_CONFIG, help="Location of configuration YAML"
-    )
-    sb_create_db.add_argument(
         "--local",
+        "-l",
         default=False,
         type=bool,
         help="Creates SQL Lite database locally, if true (defaults to False)",
