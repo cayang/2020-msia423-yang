@@ -9,17 +9,6 @@ import yaml
 
 from botocore.exceptions import ClientError
 
-from config import (
-    HOME,
-    URL_LISTINGS,
-    YAML_CONFIG,
-    S3_BUCKET,
-    S3_OBJECT,
-    DATA_PATH,
-    DATA_FILENAME_RAW,
-    PULL_DATE,
-)
-
 
 def run_ingest_data(args):
     """Run all steps to ingest data from source and upload raw data to S3
@@ -31,23 +20,27 @@ def run_ingest_data(args):
     """
 
     # Load in configs from yml file
-    with open(YAML_CONFIG, "r") as f:
+    with open(args.config.YAML_CONFIG, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         zip_file_name = config["ingest_data"]["ZIP_FILE_NAME"]
 
     # Import data
-    import_data_from_source(args.url, zip_file_name, DATA_FILENAME_RAW)
+    import_data_from_source(
+        args.url, zip_file_name, args.config.DATA_PATH, args.config.DATA_FILENAME_RAW
+    )
 
     # Upload to S3
     upload_to_s3(
-        str(DATA_FILENAME_RAW), S3_BUCKET, S3_OBJECT,
+        str(args.config.DATA_FILENAME_RAW),
+        args.config.S3_BUCKET,
+        args.config.S3_OBJECT,
     )
 
     # Remove raw data file
-    os.remove(DATA_FILENAME_RAW)
+    os.remove(args.config.DATA_FILENAME_RAW)
 
 
-def import_data_from_source(url, zip_filename, output_filename):
+def import_data_from_source(url, zip_filename, input_filepath, output_filename):
     """Import data source, unzip raw data file, and convert to CSV format
 
     Args:
@@ -60,18 +53,18 @@ def import_data_from_source(url, zip_filename, output_filename):
     r = requests.get(url)
 
     # Write out raw file
-    with open(DATA_PATH / zip_filename, "wb") as f:
+    with open(input_filepath / zip_filename, "wb") as f:
         f.write(r.content)
 
     # Unzip file and write raw data to CSV
-    with gzip.open(DATA_PATH / zip_filename) as f:
+    with gzip.open(input_filepath / zip_filename) as f:
         file = pd.read_csv(f, low_memory=False)
         file.to_csv(
             output_filename, index=False,
         )
 
         # Remove zipped file
-        os.remove(DATA_PATH / zip_filename)
+        os.remove(input_filepath / zip_filename)
 
 
 def upload_to_s3(file_name, bucket, object_name=None):
@@ -97,22 +90,3 @@ def upload_to_s3(file_name, bucket, object_name=None):
         logging.error(e)
         return False
     return True
-
-
-if __name__ == "__main__":
-
-    # Add parsers for running ingest_data
-    parser = argparse.ArgumentParser(description="Run run_ingest_data")
-    subparsers = parser.add_subparsers()
-
-    # Sub-parser
-    sb_ingest = subparsers.add_parser(
-        "ingest", description="Ingest data from web source and upload raw file to S3."
-    )
-    sb_ingest.add_argument(
-        "--url", "-u", default=URL_LISTINGS, help="URL of source data"
-    )
-    sb_ingest.set_defaults(func=run_ingest_data)
-
-    args = parser.parse_args()
-    args.func(args)

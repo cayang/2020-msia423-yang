@@ -82,7 +82,7 @@ generate_features:
         - cancellation_policy
         - require_guest_profile_picture
         - require_guest_phone_verification
-    # Place to manually select features from entire feature subset; otherwise, features above will be used by default
+    # Place to manually select features from entire feature subset
     SELECT_FEATURES:
 
 

@@ -7,8 +7,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, Numeric, Boolean
 import yaml
 
-from config import DATABASE_PATH, RDS_DATABASE
-
 Base = declarative_base()
 
 
@@ -60,16 +58,15 @@ def run_create_db(args):
     """
 
     if args.local == True:
-        engine_string = "sqlite:////{}".format(DATABASE_PATH)
+        engine_string = "sqlite:////{}".format(args.config.DATABASE_PATH)
     else:
-        conn = "mysql+pymysql"
         user = os.environ.get("MYSQL_USER")
         password = os.environ.get("MYSQL_PASSWORD")
         host = os.environ.get("MYSQL_HOST")
         port = os.environ.get("MYSQL_PORT")
 
-        engine_string = "{}://{}:{}@{}:{}/{}".format(
-            conn, user, password, host, port, RDS_DATABASE
+        engine_string = "mysql+pymysql://{}:{}@{}:{}/{}".format(
+            user, password, host, port, args.config.RDS_DATABASE
         )
 
     create_db(engine_string)
@@ -102,26 +99,3 @@ def create_db(engine_string):
 # a different module
 def persist_records(session, engine):
     pass
-
-
-if __name__ == "__main__":
-
-    # Add parsers for running create_db
-    parser = argparse.ArgumentParser(description="Run run_create_db")
-    subparsers = parser.add_subparsers()
-
-    # Sub-parser for uploading data to database
-    sb_create_db = subparsers.add_parser(
-        "create_db", description="Creates a database to store feature data."
-    )
-    sb_create_db.add_argument(
-        "--local",
-        "-l",
-        default=False,
-        type=bool,
-        help="Creates SQL Lite database locally, if true (defaults to False)",
-    )
-    sb_create_db.set_defaults(func=run_create_db)
-
-    args = parser.parse_args()
-    args.func(args)

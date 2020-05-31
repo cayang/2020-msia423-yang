@@ -17,6 +17,12 @@ if __name__ == "__main__":
         "ingest", description="Ingest data from web source and upload raw file to S3."
     )
     sb_ingest.add_argument(
+        "--config",
+        "-c",
+        default=config,
+        help="File containing configurations for running model pipeline and app.",
+    )
+    sb_ingest.add_argument(
         "--url", "-u", default=config.URL_LISTINGS, help="URL of source data"
     )
     sb_ingest.set_defaults(func=run_ingest_data)
@@ -24,6 +30,12 @@ if __name__ == "__main__":
     # Sub-parser for cleaning data
     sb_clean = subparsers.add_parser(
         "clean", description="Get raw data from S3, clean data, and save as CSV.",
+    )
+    sb_clean.add_argument(
+        "--config",
+        "-c",
+        default=config,
+        help="File containing configurations for running model pipeline and app.",
     )
     sb_clean.add_argument(
         "--data_file_raw", "-df", default=None, help="Location of the raw data file"
@@ -43,6 +55,12 @@ if __name__ == "__main__":
         description="Generates and selects a subset of features in prepration for training the model.",
     )
     sb_features.add_argument(
+        "--config",
+        "-c",
+        default=config,
+        help="File containing configurations for running model pipeline and app.",
+    )
+    sb_features.add_argument(
         "--select_features",
         "-s",
         default=False,
@@ -54,6 +72,12 @@ if __name__ == "__main__":
     # Sub-parser for uploading data to database
     sb_create_db = subparsers.add_parser(
         "create_db", description="Creates a database to store feature data."
+    )
+    sb_create_db.add_argument(
+        "--config",
+        "-c",
+        default=config,
+        help="File containing configurations for running model pipeline and app.",
     )
     sb_create_db.add_argument(
         "--local",

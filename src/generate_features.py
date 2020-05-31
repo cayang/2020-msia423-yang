@@ -8,8 +8,6 @@ import datetime
 from datetime import date, timedelta
 import yaml
 
-from config import YAML_CONFIG, DATA_FILENAME_CLEAN, DATA_FILENAME_FEATURES, PULL_DATE
-
 # Options
 pd.options.mode.chained_assignment = None
 
@@ -24,7 +22,7 @@ def run_generate_features(args):
     """
 
     # Load in configs from yml file
-    with open(YAML_CONFIG, "r") as f:
+    with open(args.config.YAML_CONFIG, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         FEATURES_HOST = config["generate_features"]["FEATURES_HOST"]
         FEATURES_PROP = config["generate_features"]["FEATURES_PROP"]
@@ -32,10 +30,10 @@ def run_generate_features(args):
         SELECT_FEATURES = config["generate_features"]["SELECT_FEATURES"]
 
     # Read in the clean data with entire feature set
-    df = pd.read_csv(DATA_FILENAME_CLEAN)
+    df = pd.read_csv(args.config.DATA_FILENAME_CLEAN)
 
     # Create features
-    df = create_host_features(df)
+    df = create_host_features(df, args.config.PULL_DATE)
     df = create_property_features(df)
     df = create_booking_features(df)
 
@@ -49,10 +47,10 @@ def run_generate_features(args):
         ]
 
     # Export features and target variable to CSV
-    df.to_csv(DATA_FILENAME_FEATURES, index=False)
+    df.to_csv(args.config.DATA_FILENAME_FEATURES, index=False)
 
 
-def create_host_features(df):
+def create_host_features(df, pull_date):
     """Perform transformations on listings dataframe to create host features"""
 
     # Convert host_since to datetime
@@ -60,7 +58,7 @@ def create_host_features(df):
 
     # Add a feature for number of years as host
     df.loc[:, "host_since_years"] = round(
-        (PULL_DATE - df["host_since"]) / np.timedelta64(1, "Y"), 2
+        (pull_date - df["host_since"]) / np.timedelta64(1, "Y"), 2
     )
 
     # Convert host_is_superhost to 0/1
@@ -196,27 +194,3 @@ def create_booking_features(df):
     df.loc[df["maximum_nights"] >= 365, "max_nights_cat"] = 3
 
     return df
-
-
-if __name__ == "__main__":
-
-    # Add parsers for running generate_features
-    parser = argparse.ArgumentParser(description="Run run_generate_features")
-    subparsers = parser.add_subparsers()
-
-    # Sub-parser
-    sb_features = subparsers.add_parser(
-        "features",
-        description="Generates and selects a subset of features in prepration for training the model.",
-    )
-    sb_features.add_argument(
-        "--select_features",
-        "-s",
-        default=False,
-        type=bool,
-        help="Specifies whether to manually specify features to keep",
-    )
-    sb_features.set_defaults(func=run_generate_features)
-
-    args = parser.parse_args()
-    args.func(args)
