@@ -33,7 +33,7 @@ def run_ingest_data(args):
     upload_to_s3(
         str(args.config.DATA_FILENAME_RAW),
         args.config.S3_BUCKET,
-        args.config.S3_OBJECT,
+        args.config.S3_OBJECT_DATA_RAW,
     )
 
     # Remove raw data file
@@ -57,6 +57,7 @@ def import_data_from_source(url, zip_filename, input_filepath, output_filename):
         f.write(r.content)
 
     # Unzip file and write raw data to CSV
+    # TODO: Write file to text file
     with gzip.open(input_filepath / zip_filename) as f:
         file = pd.read_csv(f, low_memory=False)
         file.to_csv(

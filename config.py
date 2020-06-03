@@ -22,9 +22,12 @@ URL_LISTINGS = (
     + "/data/listings.csv.gz"
 )
 
-# S3 Bucket configs
+# S3 Bucket configs and object storage locations
 S3_BUCKET = "nw-msia423-project-yang"
-S3_OBJECT = "data/listings-raw.csv"
+S3_OBJECT_DATA_RAW = "data/listings-raw.csv"
+S3_OBJECT_MODEL_TMO = "model/model.pkl"
+S3_OBJECT_MODEL_ENCODER = "model/encoder.pkl"
+S3_OBJECT_MODEL_SCALERS = "model/scalers.pkl"
 
 # RDS configs
 RDS_DATABASE = "airbnbchi_db"
@@ -37,6 +40,12 @@ DATA_FILENAME_RAW = DATA_PATH / (
 DATA_FILENAME_CLEAN = DATA_PATH / "listings-clean.csv"
 DATA_FILENAME_NEIGHBORHOOD = DATA_PATH / "neighbourhoods.csv"
 DATA_FILENAME_FEATURES = DATA_PATH / "features.csv"
+
+# Local model artifact filepaths
+MODEL_PATH = HOME / "models"
+MODEL_FILENAME_TMO = MODEL_PATH / "model.pkl"
+MODEL_FILENAME_ENCODER = MODEL_PATH / "encoder.pkl"
+MODEL_FILENAME_SCALERS = MODEL_PATH / "scalers.pkl"
 
 # Local database filepaths
 DATABASE_PATH = HOME / "data" / "airbnbchi.db"

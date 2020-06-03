@@ -2,7 +2,7 @@ model:
     name: airbnbchi
     author: Catherine Yang
     version: 1
-    description: Predicts the number of reviews
+    description: Predicts the number of reviews per month
     dependencies: requirements.txt
 
 # Model configs
@@ -84,8 +84,110 @@ generate_features:
         - require_guest_phone_verification
     # Place to manually select features from entire feature subset
     SELECT_FEATURES:
-
-
+train_model:
+    HOST_RESPONSE_MAP:
+        within an hour: 0
+        within a few hours: 1
+        within a day: 2
+        a few days or more: 3
+    # Features to be imputed
+    IMPUTE_COLS:
+        - cleaning_fee
+        - security_deposit
+        - host_response_time
+        - host_response_rate
+    # Features with boolean data type - are not transformed
+    COLS_BOOL:
+        - host_is_superhost
+        - host_has_profile_pic
+        - host_identity_verified
+        - is_location_exact
+        - extra_people_cat
+        - instant_bookable
+        - require_guest_profile_picture
+        - require_guest_phone_verification
+    # Features with numerical data type - to standardize
+    COLS_NUM_STD:
+        - host_since_years
+        - host_listings_count
+        - amenities_count
+        - price
+        - security_deposit
+        - cleaning_fee
+    # Features with numerical data type - to standardize via min/max transformation
+    COLS_NUM_MINMAX:
+        - host_response_rate
+    # Features with categorical type - to one-hot encode
+    COLS_CAT:
+        - host_response_time
+        - property_type_cat
+        - room_type
+        - bed_type_cat
+        - neighbourhood_group
+        - cancellation_policy
+    iter_imp_settings:
+        max_iter: 10
+        random_state: 423
+        initial_strategy: most_frequent
+    train_test_settings:
+        test_size: 0.2
+        random_state: 423
+    tuning_param_settings:
+        rf_model_settings:
+            random_state: 423
+            oob_score: True
+        param_grid_rf:
+            n_estimators: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+            max_features: np.arange(3, int(math.sqrt(X_train.shape[1])) + 1)
+            min_samples_split: [2, 3, 4, 5, 6, 7, 8, 9, 10]
+            min_samples_leaf: [2, 3, 4, 5]
+        gb_model_settings:
+            random_state: 423
+            n_iter_no_change: 5
+        param_grid_gb:
+            learning_rate: scipy.stats.uniform(loc=0, scale=0.3)
+            n_estimators: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+            max_depth: [3, 5, 10, 15, 20]
+            subsample: [0.5, 0.7, 0.9]
+        xgb_model_settings:
+            random_state: 423
+            n_iter_no_change: 5
+        param_grid_xgb:
+            eta: scipy.stats.uniform(loc=0, scale=0.3)
+            max_depth: [3, 5, 10, 15, 20]
+            subsample: [0.5, 0.7, 0.9]
+            colsample_bytree: [0.3, 0.5, 0.7, 0.9]
+    grid_search_settings:
+        n_iter: 30
+        random_state: 423
+        n_jobs: -1
+        scoring: r2
+    voting_model_settings:
+        estimators: [rf, gb, xgb]
+        weights: [1, 1, 10]
+    tuned_params:
+        params_rf:
+            n_estimators: 100
+            min_samples_split: 2
+            min_samples_leaf: 2
+            max_features: 7
+            random_state: 423
+            oob_score: True
+        params_gb:
+            learning_rate: 0.13835894872770876
+            max_depth: 10
+            n_estimators: 400
+            subsample: 0.9
+            random_state: 423
+            n_iter_no_change: 5
+        params_xgb:
+            colsample_bytree: 0.7
+            eta: 0.05437702201050121
+            max_depth: 20
+            subsample: 0.9
+            random_state: 423
+            n_iter_no_change: 5
+ 
 
     
 

@@ -14,8 +14,10 @@ data/*
 !data/sample/
 !data/external/
 
+# Model paths
+models/*
+
 # Configs
-config/local
 config/config.env
 .mysqlconfig
 

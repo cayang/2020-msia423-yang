@@ -5,6 +5,7 @@ from src.ingest_data import run_ingest_data
 from src.clean_data import run_clean_data
 from src.generate_features import run_generate_features
 from src.create_db import run_create_db
+from src.train_model import run_train_model
 
 if __name__ == "__main__":
 
@@ -87,6 +88,32 @@ if __name__ == "__main__":
         help="Creates SQL Lite database locally, if true (defaults to False)",
     )
     sb_create_db.set_defaults(func=run_create_db)
+
+    # Sub-parser for training model
+    sb_train_model = subparsers.add_parser(
+        "train", description="Creates trained model object."
+    )
+    sb_train_model.add_argument(
+        "--config",
+        "-c",
+        default=config,
+        help="File containing configurations for running model pipeline and app.",
+    )
+    sb_train_model.add_argument(
+        "--use_existing_params",
+        "-p",
+        default=False,
+        type=bool,
+        help="Specifies whether to use existing hyperparameters in the modelconfig.yml (can speed up model training) file or to run the grid search.",
+    )
+    sb_train_model.add_argument(
+        "--upload",
+        "-u",
+        default=True,
+        type=bool,
+        help="Specifies whether to upload trained model object to S3 bucket.",
+    )
+    sb_train_model.set_defaults(func=run_train_model)
 
     args = parser.parse_args()
     args.func(args)
