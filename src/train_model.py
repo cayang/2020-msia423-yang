@@ -34,11 +34,15 @@ def run_train_model(args):
     """
 
     # Load in configs from yml file
-    with open(args.config.YAML_CONFIG, "r") as f:
+    with open(args.config, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+        s3_objects = config["s3_objects"]
+        data_files = config["data_files"]
+        model_files = config["model_files"]
 
         # Feature lists and dictionaries for transformations
         HOST_RESPONSE_MAP = config["train_model"]["HOST_RESPONSE_MAP"]
+        TARGET_COL = config["train_model"]["TARGET_COL"]
         IMPUTE_COLS = config["train_model"]["IMPUTE_COLS"]
         COLS_NUM_STD = config["train_model"]["COLS_NUM_STD"]
         COLS_NUM_MINMAX = config["train_model"]["COLS_NUM_MINMAX"]
@@ -53,12 +57,12 @@ def run_train_model(args):
         tuned_params = config["train_model"]["tuned_params"]
 
     # Read in features dataset
-    df = pd.read_csv(args.config.DATA_FILENAME_FEATURES)
+    df = pd.read_csv(data_files["DATA_FILENAME_FEATURES"])
 
     # Impute missing values
     dummy_cols = [col for col in COLS_CAT if col not in IMPUTE_COLS]
     df_imputed = get_imputed_values(
-        df, dummy_cols, iter_imp_settings, HOST_RESPONSE_MAP
+        df, dummy_cols, TARGET_COL, iter_imp_settings, HOST_RESPONSE_MAP
     )
     df.loc[:, IMPUTE_COLS] = df_imputed[IMPUTE_COLS]
 
@@ -68,6 +72,7 @@ def run_train_model(args):
     # Develop trained model object
     tmo, stdscaler, minmaxscaler = get_trained_model_object(
         df_model,
+        TARGET_COL,
         COLS_NUM_STD,
         COLS_NUM_MINMAX,
         train_test_settings,
@@ -79,33 +84,33 @@ def run_train_model(args):
     )
 
     # Output model and encoder to pkl file
-    with open(args.config.MODEL_FILENAME_TMO, "wb") as file:
+    with open(model_files["MODEL_FILENAME_TMO"], "wb") as file:
         pkl.dump(tmo, file)
-    with open(args.config.MODEL_FILENAME_ENCODER, "wb") as file:
+    with open(model_files["MODEL_FILENAME_ENCODER"], "wb") as file:
         pkl.dump(enc, file)
-    with open(args.config.MODEL_FILENAME_SCALERS, "wb") as file:
+    with open(model_files["MODEL_FILENAME_SCALERS"], "wb") as file:
         pkl.dump((stdscaler, minmaxscaler), file)
 
     # Upload to S3 if chosen
     if args.upload:
         upload_to_s3(
-            str(args.config.MODEL_FILENAME_TMO),
-            args.config.S3_BUCKET,
-            args.config.S3_OBJECT_MODEL_TMO,
+            model_files["MODEL_FILENAME_TMO"],
+            args.s3_bucket_name,
+            s3_objects["S3_OBJECT_MODEL_TMO"],
         )
         upload_to_s3(
-            str(args.config.MODEL_FILENAME_ENCODER),
-            args.config.S3_BUCKET,
-            args.config.S3_OBJECT_MODEL_ENCODER,
+            model_files["MODEL_FILENAME_ENCODER"],
+            args.s3_bucket_name,
+            s3_objects["S3_OBJECT_MODEL_ENCODER"],
         )
         upload_to_s3(
-            str(args.config.MODEL_FILENAME_SCALERS),
-            args.config.S3_BUCKET,
-            args.config.S3_OBJECT_MODEL_SCALERS,
+            model_files["MODEL_FILENAME_SCALERS"],
+            args.s3_bucket_name,
+            s3_objects["S3_OBJECT_MODEL_SCALERS"],
         )
 
 
-def get_imputed_values(df, dummy_cols, settings, host_response_map):
+def get_imputed_values(df, dummy_cols, target_col, settings, host_response_map):
     """Imputes missing values for features with known missing values.
 
     Args:
@@ -138,7 +143,7 @@ def get_imputed_values(df, dummy_cols, settings, host_response_map):
     imp = IterativeImputer(**settings)
 
     # Define dataframe for imputation, excluding response variable
-    df_for_imp = df.loc[:, ~df.columns.isin(["reviews_per_month"])]
+    df_for_imp = df.loc[:, ~df.columns.isin([target_col])]
 
     # Get column names
     colnames = df_for_imp.columns.tolist()
@@ -182,6 +187,7 @@ def encode_variables(df, cols):
 
 def get_trained_model_object(
     df,
+    target_col,
     cols_num_std,
     cols_num_minmax,
     train_test_settings,
@@ -195,9 +201,9 @@ def get_trained_model_object(
     # List to contain all models fitted
     models_all = []
 
-    # Split into train / test set
-    X = df[[col for col in df.columns if col != "reviews_per_month"]]
-    y = df["reviews_per_month"]
+    # Split into train / test set and log transform target variable
+    X = df[[col for col in df.columns if col != target_col]]
+    y = np.log(df[target_col])
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, **train_test_settings)
     print("Train data shape:", X_train.shape)

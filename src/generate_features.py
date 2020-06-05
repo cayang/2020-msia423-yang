@@ -5,7 +5,7 @@ import argparse
 import pandas as pd
 import numpy as np
 import datetime
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import yaml
 
 # Options
@@ -22,18 +22,22 @@ def run_generate_features(args):
     """
 
     # Load in configs from yml file
-    with open(args.config.YAML_CONFIG, "r") as f:
+    with open(args.config, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+        data_files = config["data_files"]
         FEATURES_HOST = config["generate_features"]["FEATURES_HOST"]
         FEATURES_PROP = config["generate_features"]["FEATURES_PROP"]
         FEATURES_BOOKING = config["generate_features"]["FEATURES_BOOKING"]
         SELECT_FEATURES = config["generate_features"]["SELECT_FEATURES"]
 
     # Read in the clean data with entire feature set
-    df = pd.read_csv(args.config.DATA_FILENAME_CLEAN)
+    df = pd.read_csv(data_files["DATA_FILENAME_CLEAN"])
+
+    # Convert pull date argument to datetime
+    pull_date = datetime.strptime(args.pull_date, "%Y-%m-%d")
 
     # Create features
-    df = create_host_features(df, args.config.PULL_DATE)
+    df = create_host_features(df, pull_date)
     df = create_property_features(df)
     df = create_booking_features(df)
 
@@ -47,7 +51,7 @@ def run_generate_features(args):
         ]
 
     # Export features and target variable to CSV
-    df.to_csv(args.config.DATA_FILENAME_FEATURES, index=False)
+    df.to_csv(data_files["DATA_FILENAME_FEATURES"], index=False)
 
 
 def create_host_features(df, pull_date):
@@ -142,24 +146,6 @@ def create_property_features(df):
     # Create variable as count of # of amenities
     df.loc[:, "amenities_count"] = df["amenities"].str[1:-1].str.split(",").str.len()
 
-    # Convert require_guest_profile_picture to 0/1
-    df.loc[
-        df["require_guest_profile_picture"] == "t", "require_guest_profile_picture"
-    ] = 1
-    df.loc[
-        df["require_guest_profile_picture"] == "f", "require_guest_profile_picture"
-    ] = 0
-
-    # Convert require_guest_phone_verification to 0/1
-    df.loc[
-        df["require_guest_phone_verification"] == "t",
-        "require_guest_phone_verification",
-    ] = 1
-    df.loc[
-        df["require_guest_phone_verification"] == "f",
-        "require_guest_phone_verification",
-    ] = 0
-
     return df
 
 
@@ -192,5 +178,23 @@ def create_booking_features(df):
         (df["maximum_nights"] >= 30) & (df["maximum_nights"] < 365), "max_nights_cat",
     ] = 2
     df.loc[df["maximum_nights"] >= 365, "max_nights_cat"] = 3
+
+    # Convert require_guest_profile_picture to 0/1
+    df.loc[
+        df["require_guest_profile_picture"] == "t", "require_guest_profile_picture"
+    ] = 1
+    df.loc[
+        df["require_guest_profile_picture"] == "f", "require_guest_profile_picture"
+    ] = 0
+
+    # Convert require_guest_phone_verification to 0/1
+    df.loc[
+        df["require_guest_phone_verification"] == "t",
+        "require_guest_phone_verification",
+    ] = 1
+    df.loc[
+        df["require_guest_phone_verification"] == "f",
+        "require_guest_phone_verification",
+    ] = 0
 
     return df

@@ -20,24 +20,26 @@ def run_ingest_data(args):
     """
 
     # Load in configs from yml file
-    with open(args.config.YAML_CONFIG, "r") as f:
+    with open(args.config, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+        s3_objects = config["s3_objects"]
+        data_files = config["data_files"]
         zip_file_name = config["ingest_data"]["ZIP_FILE_NAME"]
 
     # Import data
     import_data_from_source(
-        args.url, zip_file_name, args.config.DATA_PATH, args.config.DATA_FILENAME_RAW
+        args.url, zip_file_name, args.data_path, data_files["DATA_FILENAME_RAW"]
     )
 
     # Upload to S3
     upload_to_s3(
-        str(args.config.DATA_FILENAME_RAW),
-        args.config.S3_BUCKET,
-        args.config.S3_OBJECT_DATA_RAW,
+        data_files["DATA_FILENAME_RAW"],
+        args.s3_bucket_name,
+        s3_objects["S3_OBJECT_DATA_RAW"],
     )
 
     # Remove raw data file
-    os.remove(args.config.DATA_FILENAME_RAW)
+    os.remove(data_files["DATA_FILENAME_RAW"])
 
 
 def import_data_from_source(url, zip_filename, input_filepath, output_filename):
@@ -91,3 +93,10 @@ def upload_to_s3(file_name, bucket, object_name=None):
         logging.error(e)
         return False
     return True
+
+
+# def append_date(file, date, file_type="csv"):
+
+#     file_name = file.split(".")[0]
+#     file_name = "".join([file_name, "-", date.strftime("%Y-%m-%d"), ".", file_type])
+#     return file_name

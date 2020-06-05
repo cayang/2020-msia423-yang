@@ -11,10 +11,5 @@ RUN pip3 install -r requirements.txt
 
 COPY . /app
 
-RUN chmod +x app/boot.sh
-
-EXPOSE 5000
-
+# Update to make
 ENTRYPOINT [ "python3" ]
-
-# CMD ["./app/boot.sh"]

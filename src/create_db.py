@@ -18,16 +18,17 @@ class Listings(Base):
     id = Column(Integer, primary_key=True, unique=True, nullable=False)
     host_since_years = Column(Numeric, unique=False, nullable=True)
     host_response_time = Column(String(100), unique=False, nullable=True)
-    host_response_rate = Column(String(100), unique=False, nullable=True)
+    host_response_rate = Column(Numeric, unique=False, nullable=True)
     host_is_superhost = Column(Boolean, unique=False, nullable=True)
     host_listings_count = Column(Integer, unique=False, nullable=True)
     host_has_profile_pic = Column(Boolean, unique=False, nullable=True)
-    host_has_identity_verified = Column(Boolean, unique=False, nullable=True)
+    host_identity_verified = Column(Boolean, unique=False, nullable=True)
     is_location_exact = Column(Boolean, unique=False, nullable=True)
     property_type_cat = Column(String(100), unique=False, nullable=True)
     room_type = Column(String(100), unique=False, nullable=True)
     accommodates_cat = Column(Integer, unique=False, nullable=True)
     bathrooms_cat = Column(Integer, unique=False, nullable=True)
+    bedrooms_cat = Column(Integer, unique=False, nullable=True)
     beds_cat = Column(Integer, unique=False, nullable=True)
     bed_type_cat = Column(String(100), unique=False, nullable=True)
     amenities_count = Column(Integer, unique=False, nullable=True)
@@ -35,14 +36,15 @@ class Listings(Base):
     security_deposit = Column(Numeric, unique=False, nullable=True)
     cleaning_fee = Column(Numeric, unique=False, nullable=True)
     guests_included_cat = Column(Integer, unique=False, nullable=True)
-    extra_people_cat = Column(Integer, unique=False, nullable=True)
+    extra_people_cat = Column(Boolean, unique=False, nullable=True)
     neighbourhood_group = Column(String(100), unique=False, nullable=True)
     min_nights_cat = Column(Integer, unique=False, nullable=True)
     max_nights_cat = Column(Integer, unique=False, nullable=True)
     instant_bookable = Column(Boolean, unique=False, nullable=True)
     cancellation_policy = Column(String(100), unique=False, nullable=True)
     require_guest_profile_picture = Column(Boolean, unique=False, nullable=True)
-    require_guest_phone_verificataion = Column(Boolean, unique=False, nullable=True)
+    require_guest_phone_verification = Column(Boolean, unique=False, nullable=True)
+    reviews_per_month = Column(Numeric, unique=False, nullable=True)
 
     def __repr__(self):
         return "<Listings %r>" % self.id
@@ -57,19 +59,18 @@ def run_create_db(args):
             - local: specification of whether to create local SQLite table RDS table
     """
 
-    if args.local == True:
-        engine_string = "sqlite:////{}".format(args.config.DATABASE_PATH)
-    else:
-        user = os.environ.get("MYSQL_USER")
-        password = os.environ.get("MYSQL_PASSWORD")
-        host = os.environ.get("MYSQL_HOST")
-        port = os.environ.get("MYSQL_PORT")
+    if args.truncate:
+        try:
+            # logger.info("Attempting to truncate listings table.")
+            _truncate_listings(args.engine_string)
+            # logger.info("tweet_score truncated.")
+        except Exception as e:
+            # logger.error(
+            #     "Error occurred while attempting to truncate tweet_score table."
+            # )
+            logging.error(e)
 
-        engine_string = "mysql+pymysql://{}:{}@{}:{}/{}".format(
-            user, password, host, port, args.config.RDS_DATABASE
-        )
-
-    create_db(engine_string)
+    create_db(args.engine_string)
 
 
 def create_db(engine_string):
@@ -79,23 +80,29 @@ def create_db(engine_string):
         engine_string (`str`, default None): String defining SQLAlchemy connection URI
     """
 
-    # Set up MySQL connection
+    # Set up SQL connection
     engine = sql.create_engine(engine_string)
 
     # Create Listings database
     Base.metadata.create_all(engine)
 
+    # Create session
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    session.commit()
+    session.close()
+
+
+def _truncate_listings(engine_string):
+    """Deletes listings table if rerunning and run into unique key error."""
+
+    # Set up MySQL connection
+    engine = sql.create_engine(engine_string)
+
     # Create db session to persist
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    # Add records
-    # NOTE: This might go into a different module to separate creating the database
-    # schema vs. uploading data into the table
-    persist_records(session, engine)
-
-
-# TODO: Write function to persist listings data to database - might go into
-# a different module
-def persist_records(session, engine):
-    pass
+    session.execute("""DELETE FROM listings""")
+    session.commit()
+    session.close()

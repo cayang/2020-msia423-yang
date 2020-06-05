@@ -6,6 +6,7 @@ import pandas as pd
 import boto3
 import logging
 import yaml
+import subprocess
 
 from botocore.exceptions import ClientError
 
@@ -21,24 +22,26 @@ def run_clean_data(args):
     """
 
     # Load configs from yml file
-    with open(args.config.YAML_CONFIG, "r") as f:
+    with open(args.config, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+        s3_objects = config["s3_objects"]
+        data_files = config["data_files"]
         listing_dtypes = config["clean_data"]["LISTING_DTYPES"]
         drop_cols = config["clean_data"]["DROP_COLS"]
 
     # If not data file specified, download from S3 then read in raw data
     if args.data_file_raw is None:
         read_from_s3(
-            args.config.S3_OBJECT,
-            args.config.S3_BUCKET,
-            str(args.config.DATA_FILENAME_RAW),
+            s3_objects["S3_OBJECT_DATA_RAW"],
+            args.s3_bucket_name,
+            data_files["DATA_FILENAME_RAW"],
         )
 
     # Read in data from CSV
     df = pd.read_csv(
-        args.config.DATA_FILENAME_RAW, na_values=["NaN", "N/A"], dtype=listing_dtypes
+        data_files["DATA_FILENAME_RAW"], na_values=["NaN", "N/A"], dtype=listing_dtypes,
     )
-    df_neighbourhood = pd.read_csv(args.config.DATA_FILENAME_NEIGHBORHOOD)
+    df_neighbourhood = pd.read_csv(data_files["DATA_FILENAME_NEIGHBORHOOD"])
 
     # Drop unused columns from
     df = df.drop(columns=drop_cols, axis=1)
@@ -58,11 +61,11 @@ def run_clean_data(args):
     df = convert_variable_types(df)
 
     # Export clean data to CSV
-    df.to_csv(args.config.DATA_FILENAME_CLEAN)
+    df.to_csv(data_files["DATA_FILENAME_CLEAN"])
 
     # Remove raw data from local if specified
     if args.keep_raw == False:
-        os.remove(args.config.DATA_FILENAME_RAW)
+        os.remove(data_files["DATA_FILENAME_RAW"])
 
 
 def read_from_s3(file_name, bucket, location):
