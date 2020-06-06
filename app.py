@@ -13,10 +13,10 @@ from src.create_db import Listings
 
 
 # Initialize the Flask application
-app = Flask(__name__, template_folder="app/templates")
+app = Flask(__name__, template_folder="app/templates", static_folder="app/static")
 
 # Configure flask app from flask_config.py
-app.config.from_object("config")
+app.config.from_pyfile("config.py")
 
 # Define LOGGING_CONFIG in flask_config.py - path to config file for setting
 # up the logger (e.g. config/logging/local.conf)
@@ -90,6 +90,7 @@ def add_entry():
     # Generate result
     result = run_predict(X, modelconfig=config.YAML_CONFIG)
 
+    # Write user input to database
     try:
         listing = Listings(
             host_since_years=float(request.form["host_since_years"]),
@@ -128,9 +129,14 @@ def add_entry():
         )
         db.session.add(listing)
         db.session.commit()
-
         logger.info("New listing added.")
-        return render_template("index.html", result=result)
+
+        # Query table results
+        query = db.session.query(Listings).limit(app.config["MAX_ROWS_SHOW"]).all()
+
+        return render_template(
+            "index.html", inputs=query, result=result, scroll="result"
+        )
 
     except:
         traceback.print_exc()

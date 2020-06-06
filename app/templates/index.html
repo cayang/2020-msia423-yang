@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<title>W3.CSS Template</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
-<script src="bootstrap.bundle.js"></script>
+
 
 <style>
    h1 {
@@ -27,6 +26,14 @@
       font-size: 16px;
    }
 
+   th,
+   td {
+      padding-left: 10px;
+      padding-right: 10px;
+      text-align: center;
+
+   }
+
    .w3-half img {
       margin-bottom: -6px;
       margin-top: 16px;
@@ -36,6 +43,13 @@
 
    .w3-half img:hover {
       opacity: 1
+   }
+
+   .results-box {
+      margin-bottom: 24px;
+      padding: 8px;
+      border-style: solid;
+      border-color: #f44336;
    }
 </style>
 
@@ -72,25 +86,25 @@
          <h1 class="w3-jumbo"><b>Airbnb Reviews Prediction: Chicago</b></h1>
          <h1 class="w3-xxxlarge w3-text-red"><b>Mission</b></h1>
          <hr style="width:50px;border:5px solid red" class="w3-round">
+         <p>To provide the tools and infrastructure that would help:</p>
+         <p>
+            - Understand the features driving the number reviews per month (used as a proxy for measuring booking
+            activity and overall
+            user engagement) for a particular listing.
+         </p>
+         <p>
+            - Predict the number of reviews per month a listing will receive, based on features pertaining to its host,
+            accommodation,
+            and booking process.
+         </p>
       </div>
 
       <!-- Photo grid (modal) -->
-      <div class="w3-row-padding">
-         <div class="w3-half">
-            <img src="/w3images/kitchenconcrete.jpg" style="width:100%" onclick="onClick(this)"
-               alt="Concrete meets bricks">
-            <img src="/w3images/livingroom.jpg" style="width:100%" onclick="onClick(this)"
-               alt="Light, white and tight scandinavian design">
-            <img src="/w3images/diningroom.jpg" style="width:100%" onclick="onClick(this)"
-               alt="White walls with designer chairs">
-         </div>
-
-         <div class="w3-half">
-            <img src="/w3images/atrium.jpg" style="width:100%" onclick="onClick(this)" alt="Windows for the atrium">
-            <img src="/w3images/bedroom.jpg" style="width:100%" onclick="onClick(this)"
-               alt="Bedroom and office in one space">
-            <img src="/w3images/livingroom2.jpg" style="width:100%" onclick="onClick(this)" alt="Scandinavian design">
-         </div>
+      <div id="pictures" class="w3-row-padding">
+         <img src="{{ url_for('static', filename='site-photo-1.png') }}" style=" width:100%" onclick="onClick(this)"
+            alt="Top Rated Listings">
+         <img src="{{ url_for('static', filename='site-photo-2.png') }}" style="width:100%" onclick="onClick(this)"
+            alt="Other Listings">
       </div>
 
       <!-- Modal for full size images on click-->
@@ -108,18 +122,18 @@
          <hr style="width:50px;border:5px solid red" class="w3-round">
          <p>Estimate the number of reviews a listing will receive!</p>
          <p>
-            In the sharing economy, especially with regards to homestays, reviews are becoming ever important in
-            supporting hosts in gaining bookings and in helping prospective guests gauge a proxy for the quality of a
-            prospective listing. This application is aimed toward helping both guests and hosts estimate the number of
-            reviews a given listing will receive.
+            In the sharing economy, especially with regards to homestays, reviews are becoming ever an important
+            component in supporting hosts in gaining bookings and in helping prospective guests gauge a proxy for the
+            quality of a prospective listing. This application is aimed toward helping both guests and hosts estimate
+            the number of reviews a given listing will receive.
          </p>
          <p>
             To use this application, input information about the listing in the section below. The application will
             generate a prediction on the number of reviews per month the listing is expected to receive.
          </p>
          <p>
-            This application is not affiliated with Airbnb. Data source used to drive the prediction engine for this
-            application: <a href=http://insideairbnb.com/get-the-data.html target="_blank">Inside Airbnb</a>
+            Disclaimer: This application is not affiliated with Airbnb. Data source used to drive the prediction engine
+            for this application: <a href=http://insideairbnb.com/get-the-data.html target="_blank">Inside Airbnb</a>
          </p>
       </div>
 
@@ -136,7 +150,7 @@
          <form action="/add" method="POST">
             <h5>About the Host</h5>
             <label for="host_since_years">How Many Years of Hosting:</label>
-            <input type=number size=16 name="host_since_years" placeholder=0 min=0 max=100 step=1 required><br>
+            <input type=number size=16 name="host_since_years" placeholder=0 min=0 max=100 step=0.01 required><br>
             <label for="host_response_time">Host Response Time:</label>
             <select name="host_response_time" id="host_response_time">
                <option value="within an hour">Within an hour</option>
@@ -306,10 +320,39 @@
             <button class="w3-button w3-red w3-padding-large w3-hover-black" type="submit">Evaluate</button>
          </form><br>
 
-         <div class="w3-light-grey w3-padding-24">
-            <p>
-               Predicted Number of Reviews: {{ result }}
-            </p>
+         <div id="result" class="results-box">
+            <h5>
+               Predicted Number of Reviews per Month: <strong>{{ result }}</strong>
+            </h5>
+         </div>
+         <p>
+            See results of your past queries here (up to 10). Note that the table contains only a subset of the entry
+            fields. These are the fields that were found to be most important in predicting the number of reviews and
+            also features that are most easily adaptable from a host's perspective.
+         </p>
+         <div id="result_table" class="results-box">
+            <table style="width:1000px">
+               <thead>
+                  <tr>
+                     <th>Response Time</th>
+                     <th>Price</th>
+                     <th># of Amenities</th>
+                     <th>Cancellation Policy</th>
+                     <th>Predicted Reviews</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  {% for input in inputs %}
+                  <tr>
+                     <td>{{ input.host_response_time }}</td>
+                     <td>{{ '$%.2f'|format(input.price) }}</td>
+                     <td>{{ input.amenities_count }}</td>
+                     <td>{{ input.cancellation_policy}}</td>
+                     <td>{{ '%0.2f'|format(input.reviews_per_month) }}</td>
+                  </tr>
+                  {% endfor %}
+               </tbody>
+            </table>
          </div>
       </div>
 
@@ -340,6 +383,9 @@
             var captionText = document.getElementById("caption");
             captionText.innerHTML = element.alt;
          }
+
+         // Scroll to results
+         document.location.hash = '#' + '{{ scroll }}';
       </script>
 
 </body>
