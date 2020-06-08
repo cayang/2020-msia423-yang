@@ -18,7 +18,7 @@ To provide the tools and infrastructure that would help:
 - Understand the features driving the number reviews per month (used as a proxy for measuring booking activity and overall user engagement) for a particular listing. 
 - Predict the number of reviews per month a listing will receive, based on features pertaining to its host, accommodation, and booking process. A variety of regression models will be tried and evaluated for predictive performance in order to select the most optimal model.
 
-This serves a twofold purpose for guests and hosts. For guests, more reviews would generate greater user interaction with the platform and can inform future prospective guests' boooking decisions. This will lead to the acquisition of new users and increase bookings within existing user base. For hosts, providing insight into attributes driving increased reviews (and bookings) will help lead to growth in the number of hosts and listings on the Airbnb platform, as well as help optimize hospitality for existing listings.
+This serves a twofold purpose for guests and hosts. For guests, more reviews would generate greater user interaction with the platform and can inform future prospective guests' booking decisions. This will lead to the acquisition of new users and increase bookings within existing user base. For hosts, providing insight into attributes driving increased reviews (and bookings) will help lead to growth in the number of hosts and listings on the Airbnb platform, as well as help optimize hospitality for existing listings.
 
 Data source: [Airbnb listing-level data](http://insideairbnb.com/get-the-data.html) for the Chicago area (updated every month)
 
@@ -38,11 +38,11 @@ Data source: [Airbnb listing-level data](http://insideairbnb.com/get-the-data.ht
 - **Epic 1**: Develop Initial Predictive Model (Train Model Object)
   - Story 1: Obtain, clean, and prepare dataset in format required for model ingestion - COMPLETE
   - Story 2: Asses dataset features, perform transformations as needed, and select features for predictive model - COMPLETE
-  - Story 3: Build predictive model(s) - linear & penalized regressions (Lasso, Elastic Net), random forest, boosted tree, neural network - and compare predictive performance to select best model type - PLANNED
-  - Story 4: Tune best model type to obtain trained model object - PLANNED
+  - Story 3: Build predictive model(s) - linear & penalized regressions (Lasso, Elastic Net), random forest, boosted tree, neural network - and compare predictive performance to select best model type - COMPLETE
+  - Story 4: Tune best model type to obtain trained model object - COMPLETE
 - **Epic 2**: Develop Webapp Infrastructure
-  - Story 1: Develop front-end input and features - PLANNED
-  - Story 2: Integrate model output with Flask application - PLANNED
+  - Story 1: Develop front-end input and features - COMPLETE
+  - Story 2: Integrate model output with Flask application - COMPLETE
 - **Epic 3**: Refine Predictive Model by Testing New Features and Feature Selection Methodologies
   - Story 1: (Specific tasks to be further defined at a later time) - ICEBOX
 - **Epic 4**: Refine Predictive Model by Testing Different Model Types
@@ -54,22 +54,22 @@ Data source: [Airbnb listing-level data](http://insideairbnb.com/get-the-data.ht
 - **Epic 1**: Build Data Acquisition Pipeline
   - Story 1: Develop scripts that ingest data from source and produce raw data files - COMPLETE
   - Story 2: Develop scripts that create local database schema - COMPLETE
-  - Story 3: Integrate data pipeline with feature pipeline and model training process - PLANNED
+  - Story 3: Integrate data pipeline with feature pipeline and model training process - COMPLETE
   - Story 4: Conduct appropriate tests to ensure performance is as expected - PLANNED
 - **Epic 2**: Optimize Data Pipeline with Alternative Acquisition and Storage
   - Story 1: (Specific tasks to be further defined at a later time) - ICEBOX
 
 ### Backlog
 
-- Initiative1.epic1.story1 (small) - PLANNED
-- Initiative1.epic1.story2 (medium) - PLANNED
-- Initiative1.epic1.story3 (big) - PLANNED
-- Initiative1.epic1.story4 (medium) - PLANNED
-- Initiative1.epic2.story1 (medium) - PLANNED
-- Initiative1.epic2.story2 (large) - PLANNED
-- Initiative2.epic1.story1 (large) - PLANNED
-- Initiative2.epic1.story2 (medium) - PLANNED
-- Initiative2.epic1.story3 (medium) - PLANNED
+- Initiative1.epic1.story1 (small) - COMPLETE
+- Initiative1.epic1.story2 (medium) - COMPLETE
+- Initiative1.epic1.story3 (big) - COMPLETE
+- Initiative1.epic1.story4 (medium) - COMPLETE
+- Initiative1.epic2.story1 (medium) - COMPLETE
+- Initiative1.epic2.story2 (large) - COMPLETE
+- Initiative2.epic1.story1 (large) - COMPLETE
+- Initiative2.epic1.story2 (medium) - COMPLETE
+- Initiative2.epic1.story3 (medium) - COMPLETE
 - Initiative2.epic1.story4 (medium) - PLANNED
  
 Sizing: small < medium < large < big
@@ -87,6 +87,8 @@ Sizing: small < medium < large < big
 <!-- toc -->
 
 - [Directory structure](#directory-structure)
+- [Running the Model Pipeline](#running-the-model-pipeline)
+- [Running the Flask App](#running-the-flask-app)
 - [Setup](#setup)
   * [1. Configure environment variables](#1-configure-environment-variables)
   * [2. Configure database (optional)](#2-configure-database-optional)
@@ -109,51 +111,144 @@ Sizing: small < medium < large < big
 ```
 ├── README.md                         <- You are here
 ├── app
-│   ├── static/                       <- CSS, JS files that remain static
-│   ├── templates/                    <- HTML (or other code) that is templated and changes based on a set of inputs
+│   ├── static/                       <- CSS, JS files that remain static.
+│   ├── templates/                    <- HTML (or other code) that is templated and changes based on a set of inputs.
 │   ├── boot.sh                       <- Start up script for launching app in Docker container.
-│   ├── Dockerfile                    <- Dockerfile for building image to run app  
+│   ├── Dockerfile_app                <- Dockerfile for building image to run app.
 │
-├── config                            <- Directory for configuration files 
+├── config                            <- Directory for configuration files. 
 │   ├── config.env                    <- Directory for keeping environment variables. **Do not sync** to Github. 
-│   ├── logging/                      <- Configuration of python loggers
-│   ├── flaskconfig.py                <- Configurations for Flask API 
-│   ├── modelconfig.yml               <- Configurations for S3 bucket, RDS DB name, and model pipeline components
+│   ├── logging/                      <- Configuration of python loggers.
+│   ├── modelconfig.yml               <- Configurations for default relative file paths and model pipeline components.
 │
-├── data                              <- Folder that contains data used or generated. Only the external/ and sample/ subdirectories are tracked by git. 
-│   ├── external/                     <- External data sources, usually reference data,  will be synced with git
-│   ├── sample/                       <- Sample data used for code development and testing, will be synced with git
-│   ├── neighbourhoods.csv            <- Static CSV file that contains map of neighborhoods to neighborhood groups
+├── data                              <- Folder that contains data used or generated. Only the external/ and sample/ subdirectories are tracked. by git. 
+│   ├── external/                     <- External data sources, usually reference data,  will be synced with git.
+│   ├── sample/                       <- Sample data used for code development and testing, will be synced with git.
+│   ├── neighbourhoods.csv            <- Static CSV file that contains map of neighborhoods to neighborhood groups.
 │
-├── deliverables/                     <- Any white papers, presentations, final work products that are presented or delivered to a stakeholder 
+├── deliverables/                     <- Any white papers, presentations, final work products that are presented or delivered to a stakeholder. 
 │
 ├── docs/                             <- Sphinx documentation based on Python docstrings. Optional for this project. 
 │
-├── figures/                          <- Generated graphics and figures to be used in reporting, documentation, etc
+├── figures/                          <- Generated graphics and figures to be used in reporting, documentation, etc.
 │
-├── models/                           <- Trained model objects (TMOs), model predictions, and/or model summaries
+├── models/                           <- Trained model objects (TMOs), model predictions, and/or model summaries.
 │
 ├── notebooks/
 │   ├── archive/                      <- Develop notebooks no longer being used.
-│   ├── deliver/                      <- Notebooks shared with others / in final state
+│   ├── deliver/                      <- Notebooks shared with others / in final state.
 │   ├── develop/                      <- Current notebooks being used in development.
 │   ├── template.ipynb                <- Template notebook for analysis with useful imports, helper functions, and SQLAlchemy setup. 
 │
 ├── reference/                        <- Any reference material relevant to the project
 │
-├── src/                              <- Source data for the project 
+├── src/                              <- Source data for the project. 
 │   ├── clean_data.py                 <- Gets raw data from S3 bucket and cleans file.
-│   ├── create_db.py                  <- Creates database schema (RDS or SQLite) and tables for data obtained after feature selection.
+│   ├── create_db.py                  <- Creates database schema (RDS or SQLite) and tables for running the Flask webapp.
 │   ├── generate_features.py          <- Creates and selects features from cleaned data in preparation for model training.
+│   ├── helpers.py                    <- Helper functions used by multiple src scripts.
 │   ├── ingest_data.py                <- Ingests data from source and uploads raw data to S3 bucket.
+│   ├── predict.py                    <- Generates a predicted output value(s) given user input in the Flask webapp.
+│   ├── predict.py                    <- Creates the trained model object and artifacts used to drive prediction engine for the Flask webapp.
 │
-├── test/                             <- Files necessary for running model tests (see documentation below) 
+├── test/                             <- Files necessary for running model tests (see documentation below). 
 │
-├── app.py                            <- Flask wrapper for running the model 
-├── run.py                            <- Simplifies the execution of one or more of the src scripts  
-├── config.py                         <- Configurations for data source URL, and local filepath references (data files, databases) 
-├── requirements.txt                  <- Python package dependencies 
+├── app.py                            <- Flask wrapper for running the model. 
+├── run.py                            <- Simplifies the execution of one or more of the src scripts.  
+├── config.py                         <- Configurations for data source URL, SQL database engine strings, S3 bucket name, and Flask API.
+├── requirements.txt                  <- Python package dependencies. 
+├── Dockerfile                        <- Dockerfile for building the image to run model pipeline.
+├── Makefile                          <- Makefile for running all steps in the model pipeline.  
 ```
+
+## Running the Model Pipeline
+
+Creates all artifacts needed to support the web application. 
+
+**Running locally**
+
+In the root of the repository, run:
+
+```bash
+make all
+```
+
+**Running in Docker**
+
+Step 1: Build Docker image
+
+```bash
+docker build -f Dockerfile -t airbnbchi .
+```
+
+Step 2: Produce all model pipeline artifacts
+
+Note you will need to set your `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` credentials in the following command line argument.
+
+```bash
+docker run -e AWS_SECRET_ACCESS_KEY=<your-aws-secret-access-key> -e AWS_ACCESS_KEY_ID=<your-aws-access-key-id> --mount type=bind,source=$(pwd),target=/app/ airbnbchi all
+```
+
+Alternatively, you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` credentials in a `config.env` file in the `config/` directory.
+
+```bash
+docker run -env-file=config/config.env --mount type=bind,source=$(pwd),target=/app/ airbnbchi all
+```
+
+## Running the Flask App
+
+**Running Locally**
+
+Step 1: Initialize the database. In the root of the repository, run
+
+```bash
+python run.py create_db
+```
+
+Step 2: Run the app
+
+```bash
+python app.py
+```
+
+**Running in Docker**
+
+Step 1: Build the Docker image
+
+```bash
+docker build -f app/Dockerfile_app -t airbnbchi .
+```
+
+Step 2: Run the app (includes initializing the database)
+
+```bash
+docker run -p 5000:5000 airbnbchi
+```
+
+**Notes on the Database**
+
+- The database can be configured by specifying a connection string as the `SQLALCHEMY_DATABASE_URI` environment variable.
+- By default, if `SQLALCHEMY_DATABASE_URI` is not provided as an environment variable, then if the `MYSQL_HOST` is provided as an environment variable, an RDS database is created (given that `MYSQL_USER` and `MYSQL_PASSWORD`, and `MYSQL_PORT` are also provided)
+-f `MYSQL_HOST` is not provided as an environment variable, then a local SQLite database is created
+
+**RDS**
+
+The default database name is `airbnbchi_db`. This default can be modified in the `config.py` script:
+```python
+if DATABASE is None:
+    DATABASE = "airbnbchi_db"  # Default RDS database
+```
+
+**Local SQLite**
+
+To change the local filepath where the SQLite database is created, modify `DATABASE_PATH` variable in the `config.py` file. Default location is:
+```python
+DATABASE_PATH = HOME / "data" / "airbnbchi.db"
+```
+where `HOME` is the root directory. The `DATBASE_PATH` should be an **absolute path**, not a relative path.
+
+
+----
 
 ## Setup
 
@@ -180,6 +275,7 @@ Create a file called `config.env` file within the `config/` path. This file will
 - `MYSQL_PASSWORD`
 - `MYSQL_HOST`
 - `MYSQL_PORT`
+- `MYSQL_DATABASE`
 
 To create the `config.env` file, from the root directory, run:
 ```bash
@@ -196,16 +292,17 @@ MYSQL_USER=<your-MySQL-user>
 MYSQL_PASSWORD=<your-MYSQL-password>
 MYSQL_HOST=<your-MySQL-host>
 MYSQL_PORT=<your-MySQL-port>
+MYSQL_DATABASE=<your-MySQL-database-name>
 ```
 
 ### 2. Configure database (optional)
 
 **RDS**
 
-To change the RDS database name, modify `RDS: DATABASE` in the `config/modelconfig.yml` file. Default database is:
-```yml
-RDS:
-    DATABASE: airbnbchi_db
+As outlied above, set the database name using the `MYSQL_DATABASE` variable in the `config/config.env` file. If this field is empty, the default database name is `airbnbchi_db`. This default can be modified in the `config.py` script:
+```python
+if DATABASE is None:
+    DATABASE = "airbnbchi_db"  # Default RDS database
 ```
 
 **Local SQLite**

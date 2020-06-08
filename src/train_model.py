@@ -534,9 +534,9 @@ def evaluate_model(model, X_train, X_test, y_train, y_test):
         rmse = math.sqrt(mean_squared_error(pred_test, y_test))
 
         logger.info("Performance metrics obtained for {} model.".format(model))
-        print("Train R2:", train_r2)
-        print("Test R2:", test_r2)
-        print("RMSE:", rmse)
+        logger.info("Train R2: {}".format(train_r2))
+        logger.info("Test R2: {}".format(test_r2))
+        logger.info("Test RMSE: {}".format(rmse))
 
     except Exception as e:
         logger.error(

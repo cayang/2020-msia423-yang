@@ -1,6 +1,3 @@
-data/listings-raw.csv:
-	python3 run.py ingest
-
 data/listings-clean.csv: data/neighbourhoods.csv
 	python3 run.py clean
 
@@ -10,6 +7,6 @@ data/features.csv: data/listings-clean.csv
 models: data/features.csv
 	python3 run.py train --use_existing_params=True
 
-all: data/listings-raw.csv data/listings-clean.csv data/features.csv models
+all: data/listings-clean.csv data/features.csv models
 
 .PHONY: all

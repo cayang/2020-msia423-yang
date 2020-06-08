@@ -69,7 +69,7 @@ def run_create_db(args):
         try:
             logger.info("Attempting to truncate listings table.")
             _truncate_listings(args.engine_string)
-            logger.info("listigs table truncated.")
+            logger.info("listings table truncated.")
         except Exception as e:
             logger.error("Error occurred while attempting to truncate listings table.")
             logger.error(e)
