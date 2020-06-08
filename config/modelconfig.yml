@@ -1,0 +1,203 @@
+model:
+    name: airbnbchi
+    author: Catherine Yang
+    version: 1
+    description: Predicts the number of reviews per month
+    dependencies: requirements.txt
+
+# S3 configs
+s3_objects:
+    S3_OBJECT_DATA_RAW: data/listings-raw.csv
+    S3_OBJECT_MODEL_TMO: model/model.pkl
+    S3_OBJECT_MODEL_ENCODER: model/encoder.pkl
+    S3_OBJECT_MODEL_SCALERS: model/scalers.pkl
+# Data file names on local
+data_files:
+    DATA_FILENAME_RAW: "data/listings-raw.csv"
+    DATA_FILENAME_CLEAN: "data/listings-clean.csv"
+    DATA_FILENAME_NEIGHBORHOOD: "data/neighbourhoods.csv"
+    DATA_FILENAME_FEATURES: "data/features.csv"
+# Model artifact file names on local
+model_files:
+    MODEL_FILENAME_TMO: models/model.pkl
+    MODEL_FILENAME_ENCODER: models/encoder.pkl
+    MODEL_FILENAME_SCALERS: models/scalers.pkl
+
+# Model pipeline configs
+TARGET_COL: reviews_per_month
+ingest_data:
+    ZIP_FILE_NAME: listings.csv.gz
+clean_data:
+    LISTING_DTYPES:
+        zipcode: str
+        price: str
+        weekly_price: str
+        monthly_price: str
+        security_deposit: str
+        cleaning_fee: str
+    # Columns to drop from the raw data
+    DROP_COLS:
+        - listing_url
+        - scrape_id
+        - last_scraped
+        - experiences_offered
+        - thumbnail_url
+        - medium_url
+        - picture_url
+        - xl_picture_url
+        - host_thumbnail_url
+        - host_picture_url
+        - smart_location
+        - calendar_last_scraped
+        - license
+        - host_url
+        - requires_license
+        - has_availability
+        - jurisdiction_names
+        - city
+        - state
+        - neighbourhood
+        - neighbourhood_group_cleansed
+        - street
+        - market
+        - country_code
+        - country
+        - calculated_host_listings_count
+        - calculated_host_listings_count_entire_homes
+        - calculated_host_listings_count_private_rooms
+        - calculated_host_listings_count_shared_rooms
+generate_features:
+    # Default features
+    SELECT_FEATURES:
+        - host_since_years
+        - host_response_time
+        - host_response_rate
+        - host_is_superhost
+        - host_listings_count
+        - host_has_profile_pic
+        - host_identity_verified
+        - is_location_exact
+        - property_type_cat
+        - room_type
+        - accommodates_cat
+        - bathrooms_cat
+        - bedrooms_cat
+        - beds_cat
+        - bed_type_cat
+        - amenities_count
+        - price
+        - security_deposit
+        - cleaning_fee
+        - guests_included_cat
+        - extra_people_cat
+        - neighbourhood_group
+        - min_nights_cat
+        - max_nights_cat
+        - instant_bookable
+        - cancellation_policy
+        - require_guest_profile_picture
+        - require_guest_phone_verification
+    COLS_BOOL:
+        - host_is_superhost
+        - host_has_profile_pic
+        - host_identity_verified
+        - is_location_exact
+        - instant_bookable
+        - require_guest_profile_picture
+        - require_guest_phone_verification
+train_model:
+    HOST_RESPONSE_MAP:
+        within an hour: 0
+        within a few hours: 1
+        within a day: 2
+        a few days or more: 3
+    # Features to be imputed
+    IMPUTE_COLS:
+        - cleaning_fee
+        - security_deposit
+        - host_response_time
+        - host_response_rate
+    # Features with numerical data type - to standardize
+    COLS_NUM_STD:
+        - host_since_years
+        - host_listings_count
+        - amenities_count
+        - price
+        - security_deposit
+        - cleaning_fee
+    # Features with numerical data type - to standardize via min/max transformation
+    COLS_NUM_MINMAX:
+        - host_response_rate
+    # Features with categorical type - to one-hot encode
+    COLS_CAT:
+        - host_response_time
+        - property_type_cat
+        - room_type
+        - bed_type_cat
+        - neighbourhood_group
+        - cancellation_policy
+    iter_imp_settings:
+        max_iter: 10
+        random_state: 423
+        initial_strategy: most_frequent
+    train_test_settings:
+        test_size: 0.2
+        random_state: 423
+    tuning_param_settings:
+        rf_model_settings:
+            random_state: 423
+            oob_score: True
+        param_grid_rf:
+            n_estimators: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+            max_features: np.arange(3, int(math.sqrt(X_train.shape[1])) + 1)
+            min_samples_split: [2, 3, 4, 5, 6, 7, 8, 9, 10]
+            min_samples_leaf: [2, 3, 4, 5]
+        gb_model_settings:
+            random_state: 423
+            n_iter_no_change: 5
+        param_grid_gb:
+            learning_rate: scipy.stats.uniform(loc=0, scale=0.3)
+            n_estimators: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+            max_depth: [3, 5, 10, 15, 20]
+            subsample: [0.5, 0.7, 0.9]
+        xgb_model_settings:
+            random_state: 423
+        param_grid_xgb:
+            eta: scipy.stats.uniform(loc=0, scale=0.3)
+            max_depth: [3, 5, 10, 15, 20]
+            subsample: [0.5, 0.7, 0.9]
+            colsample_bytree: [0.3, 0.5, 0.7, 0.9]
+    grid_search_settings:
+        n_iter: 30
+        random_state: 423
+        n_jobs: -1
+        scoring: r2
+    voting_model_settings:
+        estimators: [rf, gb, xgb]
+        weights: [1, 1, 10]
+    tuned_params:
+        params_rf:
+            n_estimators: 100
+            min_samples_split: 2
+            min_samples_leaf: 2
+            max_features: 7
+            random_state: 423
+            oob_score: True
+        params_gb:
+            learning_rate: 0.05437702201050121
+            max_depth: 20
+            n_estimators: 450
+            subsample: 0.5
+            random_state: 423
+            n_iter_no_change: 5
+        params_xgb:
+            colsample_bytree: 0.5
+            eta: 0.1030688846158923
+            max_depth: 10
+            subsample: 0.7
+            random_state: 423
+ 
+
+    
+
+    

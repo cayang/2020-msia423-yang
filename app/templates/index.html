@@ -1,43 +1,396 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link href="static/basic.css" rel="stylesheet">
-</head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
+
+
+<style>
+   h1 {
+      font-family: "Poppins", sans-serif;
+   }
+
+   h3 {
+      font-family: "Poppins", sans-serif;
+   }
+
+   h5 {
+      font-family: "Poppins", sans-serif;
+      font-size: 18px;
+      font-weight: bolder;
+   }
+
+   body {
+      font-family: "Poppins", sans-serif;
+      font-size: 16px;
+   }
+
+   th,
+   td {
+      padding-left: 10px;
+      padding-right: 10px;
+      text-align: center;
+
+   }
+
+   .w3-half img {
+      margin-bottom: -6px;
+      margin-top: 16px;
+      opacity: 0.8;
+      cursor: pointer
+   }
+
+   .w3-half img:hover {
+      opacity: 1
+   }
+
+   .results-box {
+      margin-bottom: 24px;
+      padding: 8px;
+      border-style: solid;
+      border-color: #f44336;
+   }
+</style>
 
 <body>
-    <h3>
-         <a href = "{{ url_for('index') }}">Penny Lane Music Recommender</a>
-    </h3>
 
-    <hr/>
-    <table>
-         <thead>
-            <tr>
-               <th>Title</th>
-               <th>Artist</th>
-               <th>Album</th>
-            </tr>
-         </thead>
+   <!-- Sidebar/menu -->
+   <nav class="w3-sidebar w3-red w3-collapse w3-top w3-large w3-padding" style="z-index:3;width:300px;font-weight:bold;"
+      id="mySidebar"><br>
+      <a href="javascript:void(0)" onclick="w3_close()" class="w3-button w3-hide-large w3-display-topleft"
+         style="width:100%;font-size:22px">Close Menu</a>
+      <div class="w3-bar-block">
+         <a href="#" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Home</a>
+         <a href="#mission" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Mission</a>
+         <a href="#about" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">About this Application</a>
+         <a href="#prediction" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Reviews Prediction</a>
+      </div>
+   </nav>
 
-         <tbody>
-            {% for track in tracks %}
-               <tr>
-                   <td>{{ track.title }}</td>
-                   <td>{{ track.artist }}</td>
-                   <td>{{ track.album }}</td>
-               </tr>
-            {% endfor %}
-         </tbody>
-      </table>
-      <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
-      <dl>
-        <input type=text size=15 name=title placeholder="Title">
-        <input type=text size=15 name=artist placeholder="Artist">
-        <input type=text size=15 name=album placeholder="Album">
-        <input type=submit value=Add>
-      </dl>
-    </form>
+   <!-- Top menu on small screens -->
+   <header class="w3-container w3-top w3-hide-large w3-red w3-xlarge w3-padding">
+      <a href="javascript:void(0)" class="w3-button w3-red w3-margin-right" onclick="w3_open()">☰</a>
+      <span>Airbnb Reviews Prediction: Chicago</span>
+   </header>
+
+   <!-- Overlay effect when opening sidebar on small screens -->
+   <div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu"
+      id="myOverlay"></div>
+
+   <!-- !PAGE CONTENT! -->
+   <div class="w3-main" style="margin-left:340px;margin-right:40px">
+
+      <!-- Header -->
+      <div class="w3-container" style="margin-top:80px" id="mission">
+         <h1 class="w3-jumbo"><b>Airbnb Reviews Prediction: Chicago</b></h1>
+         <h1 class="w3-xxxlarge w3-text-red"><b>Mission</b></h1>
+         <hr style="width:50px;border:5px solid red" class="w3-round">
+         <p>To provide the tools and infrastructure that would help:</p>
+         <p>
+            - Understand the features driving the number reviews per month (used as a proxy for measuring booking
+            activity and overall
+            user engagement) for a particular listing.
+         </p>
+         <p>
+            - Predict the number of reviews per month a listing will receive, based on features pertaining to its host,
+            accommodation,
+            and booking process.
+         </p>
+      </div>
+
+      <!-- Photo grid (modal) -->
+      <div id="pictures" class="w3-row-padding">
+         <img src="{{ url_for('static', filename='site-photo-1.png') }}" style=" width:100%" onclick="onClick(this)"
+            alt="Top Rated Listings">
+         <img src="{{ url_for('static', filename='site-photo-2.png') }}" style="width:100%" onclick="onClick(this)"
+            alt="Other Listings">
+      </div>
+
+      <!-- Modal for full size images on click-->
+      <div id="modal01" class="w3-modal w3-black" style="padding-top:0" onclick="this.style.display='none'">
+         <span class="w3-button w3-black w3-xxlarge w3-display-topright">×</span>
+         <div class="w3-modal-content w3-animate-zoom w3-center w3-transparent w3-padding-64">
+            <img id="img01" class="w3-image">
+            <p id="caption"></p>
+         </div>
+      </div>
+
+      <!-- About -->
+      <div class="w3-container" id="about" style="margin-top:75px">
+         <h1 class="w3-xxxlarge w3-text-red"><b>About this Application</b></h1>
+         <hr style="width:50px;border:5px solid red" class="w3-round">
+         <p>Estimate the number of reviews a listing will receive!</p>
+         <p>
+            In the sharing economy, especially with regards to homestays, reviews are becoming ever an important
+            component in supporting hosts in gaining bookings and in helping prospective guests gauge a proxy for the
+            quality of a prospective listing. This application is aimed toward helping both guests and hosts estimate
+            the number of reviews a given listing will receive.
+         </p>
+         <p>
+            To use this application, input information about the listing in the section below. The application will
+            generate a prediction on the number of reviews per month the listing is expected to receive.
+         </p>
+         <p>
+            Disclaimer: This application is not affiliated with Airbnb. Data source used to drive the prediction engine
+            for this application: <a href=http://insideairbnb.com/get-the-data.html target="_blank">Inside Airbnb</a>
+         </p>
+      </div>
+
+      <!-- Prediction -->
+      <div class="w3-container" id="prediction" style="margin-top:75px">
+         <h1 class="w3-xxxlarge w3-text-red"><b>Reviews Prediction</b></h1>
+         <hr style="width:50px;border:5px solid red" class="w3-round">
+         <p>
+            Input information about a listing (or a potential listing) and get an estimate on the number of reviews the
+            listing will receive.
+         </p>
+
+         <!-- Data Input -->
+         <form action="/add" method="POST">
+            <h5>About the Host</h5>
+            <label for="host_since_years">How Many Years of Hosting:</label>
+            <input type=number size=16 name="host_since_years" placeholder=0 min=0 max=100 step=0.01 required><br>
+            <label for="host_response_time">Host Response Time:</label>
+            <select name="host_response_time" id="host_response_time">
+               <option value="within an hour">Within an hour</option>
+               <option value="within a few hours">Within a few hours</option>
+               <option value="within a day">Within a day</option>
+               <option value="a few days or more">A few days or more</option>
+            </select><br>
+            <label for="host_response_rate">Host Response Rate:</label>
+            <input type=number size=16 name="host_response_rate" placeholder=0 min=0.0 max=1.0 step=0.01 required><br>
+            <label for="host_is_superhost">Host is Superhost:</label>
+            <select name="host_is_superhost" id="host_is_superhost">
+               <option value=1>Yes</option>
+               <option value=0>No</option>
+            </select><br>
+            <label for="host_listings_count">Number of Listings Host has:</label>
+            <input type=number size=16 name="host_listings_count" placeholder=0 min=0 max=5000 step=1 required><br>
+            <label for="host_has_profile_pic">Host Profile Picture:</label>
+            <select name="host_has_profile_pic" id="host_has_profile_pic">
+               <option value=1>Yes</option>
+               <option value=0>No</option>
+            </select><br>
+            <label for="host_identity_verified">Host Identity Verified:</label>
+            <select name="host_identity_verified" id="host_identity_verified">
+               <option value=1>Yes</option>
+               <option value=0>No</option>
+            </select><br>
+
+            <h5>About the Property</h5>
+            <label for="is_location_exact">Is Location Exact:</label>
+            <select name="is_location_exact" id="is_location_exact">
+               <option value=1>Yes</option>
+               <option value=0>No</option>
+            </select><br>
+            <label for="property_type_cat">Property Type:</label>
+            <select name="property_type_cat" id="property_type_cat">
+               <option value="Apartment">Apartment</option>
+               <option value="Condominium">Condominium</option>
+               <option value="House">House</option>
+               <option value="Other">Other</option>
+            </select><br>
+            <label for="room_type">Room Type:</label>
+            <select name="room_type" id="room_type">
+               <option value="Entire home/apt">Entire home/apt</option>
+               <option value="Private room">Private room</option>
+               <option value="Hotel room">Hotel room</option>
+               <option value="Shared room">Shared room</option>
+            </select><br>
+            <label for="accommodates_cat">Number of Guests that can be Accommodated:</label>
+            <select name="accommodates_cat" id="accommodates_cat">
+               <option value=1>0-2</option>
+               <option value=2>3-4</option>
+               <option value=3>5-6</option>
+               <option value=4>6-7</option>
+               <option value=5>More than 8</option>
+            </select><br>
+            <label for="bathrooms_cat">Number of Bathrooms:</label>
+            <select name="bathrooms_cat" id="bathrooms_cat">
+               <option value=1>1</option>
+               <option value=2>2</option>
+               <option value=3>3+</option>
+            </select><br>
+            <label for="bedrooms_cat">Number of Bedrooms:</label>
+            <select name="bedrooms_cat" id="bedrooms_cat">
+               <option value=0>0</option>
+               <option value=1>1</option>
+               <option value=2>2</option>
+               <option value=3>3+</option>
+            </select><br>
+            <label for="beds_cat">Number of Beds:</label>
+            <select name="beds_cat" id="beds_cat">
+               <option value=1>1</option>
+               <option value=2>2</option>
+               <option value=3>3</option>
+               <option value=4>4</option>
+               <option value=5>5+</option>
+            </select><br>
+            <label for="bed_type_cat">Bed Type:</label>
+            <select name="bed_type_cat" id="bed_type_cat">
+               <option value="Real Bed">Real Bed</option>
+               <option value="Other">Other</option>
+            </select><br>
+            <label for="amenities_count">Number of Amenities:</label>
+            <input type=number size=16 name="amenities_count" placeholder=0 min=0 max=100 step=1 required><br>
+            <label for="price">Price per Night ($):</label>
+            <input type=number size=16 name="price" placeholder=0 min=0 max=5000><br>
+            <label for="security_deposit">Security Deposit ($):</label>
+            <input type=number size=16 name="security_deposit" placeholder=0 min=0 max=2000 required><br>
+            <label for="cleaning_fee">Cleaning Fee ($):</label>
+            <input type=number size=16 name="cleaning_fee" placeholder=0 min=0 max=2000 required><br>
+            <label for="guests_included_cat">Number of Guests that can be Included:</label>
+            <select name="guests_included_cat" id="guests_included_cat">
+               <option value=1>1</option>
+               <option value=2>2</option>
+               <option value=3>3+</option>
+            </select><br>
+            <label for="extra_people_cat">Can Extra People be Included:</label>
+            <select name="extra_people_cat" id="extra_people_cat">
+               <option value=0>No</option>
+               <option value=1>Yes</option>
+            </select><br>
+            <label for="neighbourhood_group">Neighbourhood:</label>
+            <select name="neighbourhood_group" id="neighbourhood_group">
+               <option value="Avondale">Avondale</option>
+               <option value="Bridgeport">Bridgeport</option>
+               <option value="Bronzeville">Bronzeville</option>
+               <option value="Douglas">Douglas</option>
+               <option value="Edgewater">Edgewater</option>
+               <option value="Hyde Park">Hyde Park</option>
+               <option value="Irving Park">Irving Park</option>
+               <option value="Lake View">Lake View</option>
+               <option value="Lincoln Park">Lincoln Park</option>
+               <option value="Lincoln Square">Lincoln Square</option>
+               <option value="Logan Square">Logan Square</option>
+               <option value="Loop">Loop</option>
+               <option value="Lower West Side">Lower West Side</option>
+               <option value="Near North Side">Near North Side</option>
+               <option value="Near South Side">Near South Side</option>
+               <option value="Near West Side">Near West Side</option>
+               <option value="North Center">North Center</option>
+               <option value="Northwest Side">Northwest Side</option>
+               <option value="Rogers Park">Rogers Park</option>
+               <option value="South Side">South Side</option>
+               <option value="Uptown">Uptown</option>
+               <option value="West Side">West Side</option>
+               <option value="West Town">West Town</option>
+            </select>
+
+            <h5>About the Booking</h5>
+            <label for="instant_bookable">Is Instant Booking Available:</label>
+            <select name="instant_bookable" id="instant_bookable">
+               <option value=1>Yes</option>
+               <option value=0>No</option>
+            </select><br>
+            <label for="cancellation_policy">Cancellation Policy:</label>
+            <select name="cancellation_policy" id="cancellation_policy">
+               <option value="flexible">Flexible</option>
+               <option value="moderate">Moderate</option>
+               <option value="strict_14_with_grace_period">Strict with 14 day grace period</option>
+               <option value="strict">Super strict or long term</option>
+            </select>
+            <a href=https://www.airbnb.com/home/cancellation_policies#flexible target="_blank">See Airbnb Cancellation
+               Policies
+            </a><br>
+            <label for="min_nights_cat">Minimum Nights:</label>
+            <select name="min_nights_cat" id="min_nights_cat">
+               <option value=1>0-6</option>
+               <option value=2>7-29</option>
+               <option value=3>30+</option>
+            </select><br>
+            <label for="max_nights_cat">Maximum Nights:</label>
+            <select name="max_nights_cat" id="max_nights_cat">
+               <option value=1>0-29</option>
+               <option value=2>30-364</option>
+               <option value=3>365+</option>
+            </select><br>
+            <label for="require_guest_profile_picture">Require Guest Profile Picture:</label>
+            <select name="require_guest_profile_picture" id="require_guest_profile_picture">
+               <option value=0>No</option>
+               <option value=1>Yes</option>
+            </select><br>
+            <label for="require_guest_phone_verification">Require Guest Phone Verification:</label>
+            <select name="require_guest_phone_verification" id="require_guest_phone_verification">
+               <option value=0>No</option>
+               <option value=1>Yes</option>
+            </select><br><br>
+
+            <button class="w3-button w3-red w3-padding-large w3-hover-black" type="submit">Evaluate</button>
+         </form><br>
+
+         <div id="result" class="results-box">
+            <h5>
+               Predicted Number of Reviews per Month: <strong>{{ result }}</strong>
+            </h5>
+            <h5>
+               Percentile Amongst Listings: <strong>{{ percentile }}</strong>
+            </h5>
+         </div>
+         <p>
+            See results of your past queries here (up to 10). Note that the table contains only a subset of the entry
+            fields. These are the fields that were found to be most important in predicting the number of reviews and
+            also features that are most easily adaptable from a host's perspective.
+         </p>
+         <div id="result_table" class="results-box">
+            <table style="width:1000px">
+               <thead>
+                  <tr>
+                     <th>Response Time</th>
+                     <th>Price</th>
+                     <th># of Amenities</th>
+                     <th>Cancellation Policy</th>
+                     <th>Predicted Reviews</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  {% for input in inputs %}
+                  <tr>
+                     <td>{{ input.host_response_time }}</td>
+                     <td>{{ '$%.2f'|format(input.price) }}</td>
+                     <td>{{ input.amenities_count }}</td>
+                     <td>{{ input.cancellation_policy}}</td>
+                     <td>{{ '%.2f'|format(input.reviews_per_month) }}</td>
+                  </tr>
+                  {% endfor %}
+               </tbody>
+            </table>
+         </div>
+      </div>
+
+      <!-- End page content -->
+
+      <!-- W3.CSS Container -->
+      <div class="w3-light-grey w3-container w3-padding-32" style="margin-top:75px;padding-right:58px">
+         <p class="w3-right">Powered by <a href="https://www.w3schools.com/w3css/default.asp" title="W3.CSS"
+               target="_blank" class="w3-hover-opacity">w3.css</a></p>
+      </div>
+
+      <script>
+         // Script to open and close sidebar
+         function w3_open() {
+            document.getElementById("mySidebar").style.display = "block";
+            document.getElementById("myOverlay").style.display = "block";
+         }
+
+         function w3_close() {
+            document.getElementById("mySidebar").style.display = "none";
+            document.getElementById("myOverlay").style.display = "none";
+         }
+
+         // Modal Image Gallery
+         function onClick(element) {
+            document.getElementById("img01").src = element.src;
+            document.getElementById("modal01").style.display = "block";
+            var captionText = document.getElementById("caption");
+            captionText.innerHTML = element.alt;
+         }
+
+         // Scroll to results
+         document.location.hash = '#' + '{{ scroll }}';
+      </script>
 
 </body>
+
 </html>
