@@ -24,4 +24,7 @@ config/config.env
 # Notebooks
 notebooks/develop/*
 
+# Deliverables
+deliverables/presentation.pptx
+
 !.gitkeep

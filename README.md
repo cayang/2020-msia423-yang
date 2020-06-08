@@ -225,6 +225,8 @@ Step 2: Run the app (includes initializing the database)
 docker run -p 5000:5000 airbnbchi
 ```
 
+You should now be able to access the app at http://0.0.0.0:5000/ in your browser.
+
 **Notes on the Database**
 
 - The database can be configured by specifying a connection string as the `SQLALCHEMY_DATABASE_URI` environment variable.
