@@ -24,6 +24,7 @@ model_files:
     MODEL_FILENAME_SCALERS: models/scalers.pkl
 
 # Model pipeline configs
+TARGET_COL: reviews_per_month
 ingest_data:
     ZIP_FILE_NAME: listings.csv.gz
 clean_data:
@@ -66,8 +67,8 @@ clean_data:
         - calculated_host_listings_count_private_rooms
         - calculated_host_listings_count_shared_rooms
 generate_features:
-    # Default host features subset for model
-    FEATURES_HOST:
+    # Default features
+    SELECT_FEATURES:
         - host_since_years
         - host_response_time
         - host_response_rate
@@ -75,8 +76,6 @@ generate_features:
         - host_listings_count
         - host_has_profile_pic
         - host_identity_verified
-    # Default property features subset for model
-    FEATURES_PROP:
         - is_location_exact
         - property_type_cat
         - room_type
@@ -92,39 +91,32 @@ generate_features:
         - guests_included_cat
         - extra_people_cat
         - neighbourhood_group
-    # Default booking features subset for model
-    FEATURES_BOOKING:
         - min_nights_cat
         - max_nights_cat
         - instant_bookable
         - cancellation_policy
         - require_guest_profile_picture
         - require_guest_phone_verification
-    # Place to manually select features from entire feature subset
-    SELECT_FEATURES:
+    COLS_BOOL:
+        - host_is_superhost
+        - host_has_profile_pic
+        - host_identity_verified
+        - is_location_exact
+        - instant_bookable
+        - require_guest_profile_picture
+        - require_guest_phone_verification
 train_model:
     HOST_RESPONSE_MAP:
         within an hour: 0
         within a few hours: 1
         within a day: 2
         a few days or more: 3
-    TARGET_COL: reviews_per_month
     # Features to be imputed
     IMPUTE_COLS:
         - cleaning_fee
         - security_deposit
         - host_response_time
         - host_response_rate
-    # Features with boolean data type - are not transformed
-    COLS_BOOL:
-        - host_is_superhost
-        - host_has_profile_pic
-        - host_identity_verified
-        - is_location_exact
-        - extra_people_cat
-        - instant_bookable
-        - require_guest_profile_picture
-        - require_guest_phone_verification
     # Features with numerical data type - to standardize
     COLS_NUM_STD:
         - host_since_years

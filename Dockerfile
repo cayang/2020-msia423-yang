@@ -11,5 +11,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . /app
 
-# Update to make
-ENTRYPOINT [ "python3" ]
+ENTRYPOINT [ "make" ]

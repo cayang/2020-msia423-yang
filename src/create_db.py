@@ -1,11 +1,16 @@
 import os
-import argparse
 import logging
+import logging.config
 import sqlalchemy as sql
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, Numeric, Boolean
 import yaml
+
+import config
+
+logging.config.fileConfig(config.LOGGING_CONFIG)
+logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
@@ -56,21 +61,27 @@ def run_create_db(args):
     Args:
         args (args from user): contains
             - config: location of YAML config file
-            - local: specification of whether to create local SQLite table RDS table
+            - truncate: specification of whether to remove existing table
+            - engine_string: engine string for creating database
     """
 
     if args.truncate:
         try:
-            # logger.info("Attempting to truncate listings table.")
+            logger.info("Attempting to truncate listings table.")
             _truncate_listings(args.engine_string)
-            # logger.info("tweet_score truncated.")
+            logger.info("listigs table truncated.")
         except Exception as e:
-            # logger.error(
-            #     "Error occurred while attempting to truncate tweet_score table."
-            # )
-            logging.error(e)
+            logger.error("Error occurred while attempting to truncate listings table.")
+            logger.error(e)
+            pass
 
-    create_db(args.engine_string)
+    if args.engine_string is None:
+        return ValueError("`engine` or `engine_string` must be provided.")
+    else:
+        logger.info(
+            "Connecting to database with engine string {}.".format(args.engine_string)
+        )
+        create_db(args.engine_string)
 
 
 def create_db(engine_string):

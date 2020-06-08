@@ -41,8 +41,6 @@ SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
 if DATABASE is None:
     DATABASE = "airbnbchi_db"  # Default RDS database
 
-print(SQLALCHEMY_DATABASE_URI)
-print(DB_HOST)
 if SQLALCHEMY_DATABASE_URI is not None:
     pass
 elif DB_HOST is None:
@@ -56,7 +54,6 @@ else:
         port=DB_PORT,
         db=DATABASE,
     )
-print(SQLALCHEMY_DATABASE_URI)
 
 # Flask configs
 DEBUG = True

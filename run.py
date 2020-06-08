@@ -1,4 +1,6 @@
 import argparse
+import logging
+import logging.config
 
 import config
 from src.ingest_data import run_ingest_data
@@ -6,6 +8,9 @@ from src.clean_data import run_clean_data
 from src.generate_features import run_generate_features
 from src.create_db import run_create_db
 from src.train_model import run_train_model
+
+logging.config.fileConfig(config.LOGGING_CONFIG, disable_existing_loggers=False)
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
 
@@ -80,10 +85,16 @@ if __name__ == "__main__":
         help="Name of the S3 bucket to pull raw data from.",
     )
     sb_clean.add_argument(
-        "--data_file_raw",
-        "-df",
+        "--input",
+        "-i",
         default=None,
-        help="Location of the raw data file if stored locally.",
+        help="File name of the raw data file, if stored locally.",
+    )
+    sb_clean.add_argument(
+        "--output",
+        "-o",
+        default=None,
+        help="File name to save output cleaned data CSV file.",
     )
     sb_clean.add_argument(
         "--keep_raw",
@@ -106,17 +117,19 @@ if __name__ == "__main__":
         help="Location of YAML file containing configurations for running model pipeline.",
     )
     sb_features.add_argument(
+        "--input", "-i", default=None, help="File name of the clean data file.",
+    )
+    sb_features.add_argument(
+        "--output",
+        "-o",
+        default=None,
+        help="File name to save output features data CSV file.",
+    )
+    sb_features.add_argument(
         "--pull_date",
         "-p",
         default=config.PULL_DATE_STR,
         help="As of date denoting the version of the dataset that was pulled from source.",
-    )
-    sb_features.add_argument(
-        "--select_features",
-        "-s",
-        default=False,
-        type=bool,
-        help="Specifies whether to manually specify features to keep",
     )
     sb_features.set_defaults(func=run_generate_features)
 
@@ -129,6 +142,15 @@ if __name__ == "__main__":
         "-c",
         default=config.YAML_CONFIG,
         help="Location of YAML file containing configurations for running model pipeline.",
+    )
+    sb_train.add_argument(
+        "--input", "-i", default=None, help="File name of the features data file.",
+    )
+    sb_train.add_argument(
+        "--output",
+        "-o",
+        default=None,
+        help="File path to save output model artifacts pkl files. Must be an absolute folder path, not filename.",
     )
     sb_train.add_argument(
         "--use_existing_params",

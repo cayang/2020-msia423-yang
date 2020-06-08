@@ -87,8 +87,13 @@ def add_entry():
         index=np.arange(0, 1),
     )
 
-    # Generate result
-    result = run_predict(X, modelconfig=config.YAML_CONFIG)
+    # Generate prediction result
+    logger.info("Generating prediction.")
+    try:
+        result, perc = run_predict(X, modelconfig=config.YAML_CONFIG)
+    except:
+        logger.error("Unable to generate a prediction, error page returned.")
+        return render_template("error.html", result="Result not available")
 
     # Write user input to database
     try:
@@ -131,16 +136,16 @@ def add_entry():
         db.session.commit()
         logger.info("New listing added.")
 
-        # Query table results
+        # Query table results and expose info from last few user queries
         query = db.session.query(Listings).limit(app.config["MAX_ROWS_SHOW"]).all()
 
         return render_template(
-            "index.html", inputs=query, result=result, scroll="result"
+            "index.html", inputs=query, result=result, percentile=perc, scroll="result"
         )
 
     except:
         traceback.print_exc()
-        logger.warning("Not able to display tracks, error page returned")
+        logger.warning("Not able to display prediction, error page returned")
         return render_template("error.html", result="Result not available")
 
 

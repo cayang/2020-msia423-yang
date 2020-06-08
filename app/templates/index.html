@@ -324,6 +324,9 @@
             <h5>
                Predicted Number of Reviews per Month: <strong>{{ result }}</strong>
             </h5>
+            <h5>
+               Percentile Amongst Listings: <strong>{{ percentile }}</strong>
+            </h5>
          </div>
          <p>
             See results of your past queries here (up to 10). Note that the table contains only a subset of the entry
@@ -348,7 +351,7 @@
                      <td>{{ '$%.2f'|format(input.price) }}</td>
                      <td>{{ input.amenities_count }}</td>
                      <td>{{ input.cancellation_policy}}</td>
-                     <td>{{ '%0.2f'|format(input.reviews_per_month) }}</td>
+                     <td>{{ '%.2f'|format(input.reviews_per_month) }}</td>
                   </tr>
                   {% endfor %}
                </tbody>
