@@ -65,7 +65,7 @@ def run_create_db(args):
             - engine_string: engine string for creating database
     """
 
-    if args.truncate:
+    if args.truncate == True:
         try:
             logger.info("Attempting to truncate listings table.")
             _truncate_listings(args.engine_string)
