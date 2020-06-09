@@ -33,7 +33,7 @@ if __name__ == "__main__":
         "--truncate",
         "-t",
         default=False,
-        type=bool,
+        action="store_true",
         help="Specifies whether to delete an existing listings database table",
     )
     sb_create_db.add_argument(

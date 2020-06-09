@@ -134,7 +134,7 @@ Sizing: small < medium < large < big
 │
 ├── figures/                          <- Generated graphics and figures to be used in reporting, documentation, etc.
 │
-├── models/                           <- Trained model objects (TMOs), model predictions, and/or model summaries.
+├── models/                           <- Trained model objects (TMOs), artifacts, and model predictions, and/or model summaries.
 │
 ├── notebooks/
 │   ├── archive/                      <- Develop notebooks no longer being used.
@@ -142,7 +142,7 @@ Sizing: small < medium < large < big
 │   ├── develop/                      <- Current notebooks being used in development.
 │   ├── template.ipynb                <- Template notebook for analysis with useful imports, helper functions, and SQLAlchemy setup. 
 │
-├── reference/                        <- Any reference material relevant to the project
+├── reference/                        <- Any reference material relevant to the project.
 │
 ├── src/                              <- Source data for the project. 
 │   ├── clean_data.py                 <- Gets raw data from S3 bucket and cleans file.
@@ -151,7 +151,7 @@ Sizing: small < medium < large < big
 │   ├── helpers.py                    <- Helper functions used by multiple src scripts.
 │   ├── ingest_data.py                <- Ingests data from source and uploads raw data to S3 bucket.
 │   ├── predict.py                    <- Generates a predicted output value(s) given user input in the Flask webapp.
-│   ├── train_model.py                    <- Creates the trained model object and artifacts used to drive prediction engine for the Flask webapp.
+│   ├── train_model.py                <- Creates the trained model object and artifacts used to drive prediction engine for the Flask webapp.
 │
 ├── test/                             <- Files necessary for running model tests (see documentation below). 
 │
@@ -224,13 +224,13 @@ python app.py
 Step 1: Build the Docker image
 
 ```bash
-docker build -f app/Dockerfile_app -t airbnbchi .
+docker build -f app/Dockerfile_app -t airbnbchi_app .
 ```
 
 Step 2: Run the app (includes initializing the database)
 
 ```bash
-docker run -p 5000:5000 airbnbchi
+docker run -p 5000:5000 airbnbchi_app
 ```
 
 You should now be able to access the app at http://0.0.0.0:5000/ in your browser.
@@ -238,6 +238,9 @@ You should now be able to access the app at http://0.0.0.0:5000/ in your browser
 **Notes on the Database**
 
 - The database can be configured by specifying a connection string as the `SQLALCHEMY_DATABASE_URI` environment variable.
+  ```bash
+  docker run -e SQLALCHEMY_DATABASE_URI=<your-connection-string> -p 5000:5000 airbnbchi_app
+  ```
 - By default, if `SQLALCHEMY_DATABASE_URI` is not provided as an environment variable, then if the `MYSQL_HOST` is provided as an environment variable, an RDS database is created (given that `MYSQL_USER` and `MYSQL_PASSWORD`, and `MYSQL_PORT` are also provided)
 - If `MYSQL_HOST` is not provided as an environment variable, then a local SQLite database in the `/data` folder is created
 
@@ -470,6 +473,27 @@ docker run airbnbchi test_generate_features
 docker run airbnbchi test_train_model
 docker run airbnbchi test_predict
 ```
+
+The input files for each test script (all located in the `/test` folder):
+- `test_ingest_data.py`: none
+- `test_clean_data.py`:
+  - test_listings-raw.csv
+  - test_bad_listings-raw.csv
+- `test_generate_features.py`:
+  - test_listings-clean.csv
+  - test_bad_listings-clean.csv
+- `test_train_model.py`
+  - test_features.csv
+  - test_train-data.csv
+  - test_train-labels.csv
+  - test_test-data.csv
+  - test_test-labels.csv
+- `test_predict.py`
+  - test_encoder.pkl
+  - test_scalers.pkl
+  - test_model.pkl
+  - test_input_data.csv
+  - test_bad_input_data.csv
 
 ----
 
