@@ -89,18 +89,20 @@ Sizing: small < medium < large < big
 - [Directory structure](#directory-structure)
 - [Running the Model Pipeline](#running-the-model-pipeline)
 - [Running the Flask App](#running-the-flask-app)
-- [Setup](#setup)
+- [Running Unit Tests](#running-unit-tests)
+- [Addendum: Configurations](#addendum-configurations)
   * [1. Configure environment variables](#1-configure-environment-variables)
-  * [2. Configure database (optional)](#2-configure-database-optional)
-- [Running the Model Pipeline](#running-the-model-pipeline)
-  * [1. Initialize the database](#1-initialize-the-database-schema)
-  * [2. Ingest data from source and upload to S3 bucket](#2-ingest-data-from-source-and-upload-to-S3-bucket)
-  * [3. Clean raw data](#3-clean-raw-data)
-  * [4. Generate and select features](#4-generate-and-select-features)
-- [Running the Model Pipeline in Docker (Optional)](#running-the-model-pipeline-in-docker-optional)
-  * [1. Build the Docker image](#1-build-the-docker-image)
-  * [2. Run model pipeline scripts](#2-run-model-pipeline-scripts)
-- [Running MySQL in Command Line (Optional)](#running-mysql-in-command-line-optional)
+  * [2. Configure database connection string](#2-configure-database-connection-string)
+  * [3. Configure S3 bucket](#3-configure-s3-bucket)
+- [Addendum: Running Model Pipeline Individual Steps](#addendum-running-model-pipeline-individual-steps)
+  * [1. Ingest data from source and upload to S3 bucket](#1-ingest-data-from-source-and-upload-to-S3-bucket)
+  * [2. Clean raw data](#2-clean-raw-data)
+  * [3. Generate and select features](#3-generate-and-select-features)
+  * [4. Train model and create model artifacts](#4-train-model-and-create-model-artifacts)
+- [Addendum: Running Model Pipeline Individual Steps in Docker](#running-model-pipeline-individual-steps-in-docker)
+- [Addendum: Running Unit Test Individual Steps](#addendum-running-unit-test-individual-steps)
+- [Addendum: Running Unit Test Individual Steps in Docker](#addendum-running-unit-test-individual-steps-in-Docker)
+- [Addendum: Running MySQL in Command Line (Optional)](#addendum-running-mysql-in-command-line-optional)
   * [1. Configure MySQL environment variables](#1-configure-mysql-environment-variables)
   * [2. Run MySQL in Docker](#2-run-mysql-in-docker)
 
@@ -149,7 +151,7 @@ Sizing: small < medium < large < big
 │   ├── helpers.py                    <- Helper functions used by multiple src scripts.
 │   ├── ingest_data.py                <- Ingests data from source and uploads raw data to S3 bucket.
 │   ├── predict.py                    <- Generates a predicted output value(s) given user input in the Flask webapp.
-│   ├── predict.py                    <- Creates the trained model object and artifacts used to drive prediction engine for the Flask webapp.
+│   ├── train_model.py                    <- Creates the trained model object and artifacts used to drive prediction engine for the Flask webapp.
 │
 ├── test/                             <- Files necessary for running model tests (see documentation below). 
 │
@@ -158,12 +160,18 @@ Sizing: small < medium < large < big
 ├── config.py                         <- Configurations for data source URL, SQL database engine strings, S3 bucket name, and Flask API.
 ├── requirements.txt                  <- Python package dependencies. 
 ├── Dockerfile                        <- Dockerfile for building the image to run model pipeline.
-├── Makefile                          <- Makefile for running all steps in the model pipeline.  
+├── Makefile                          <- Makefile for running all steps in the model pipeline and for running all unit tests.  
 ```
 
 ## Running the Model Pipeline
 
 Creates all artifacts needed to support the web application. 
+
+Note: if the data has **not** already been ingested and uploaded to S3 (or saved locally), in the root of the repository, first run:
+
+```bash
+python run.py ingest
+```
 
 **Running locally**
 
@@ -231,30 +239,53 @@ You should now be able to access the app at http://0.0.0.0:5000/ in your browser
 
 - The database can be configured by specifying a connection string as the `SQLALCHEMY_DATABASE_URI` environment variable.
 - By default, if `SQLALCHEMY_DATABASE_URI` is not provided as an environment variable, then if the `MYSQL_HOST` is provided as an environment variable, an RDS database is created (given that `MYSQL_USER` and `MYSQL_PASSWORD`, and `MYSQL_PORT` are also provided)
--f `MYSQL_HOST` is not provided as an environment variable, then a local SQLite database is created
+- If `MYSQL_HOST` is not provided as an environment variable, then a local SQLite database in the `/data` folder is created
 
-**RDS**
+## Running Unit Tests
 
-The default database name is `airbnbchi_db`. This default can be modified in the `config.py` script:
-```python
-if DATABASE is None:
-    DATABASE = "airbnbchi_db"  # Default RDS database
+**Running Locally**
+
+In the *root* of the repository, run:
+
+```bash
+make tests_all
 ```
 
-**Local SQLite**
+**Running in Docker**
 
-To change the local filepath where the SQLite database is created, modify `DATABASE_PATH` variable in the `config.py` file. Default location is:
-```python
-DATABASE_PATH = HOME / "data" / "airbnbchi.db"
+Step 1: Build the Docker image (can use the same Docker image as the [model pipeline](#running-the-model-pipeline) if already built). If the Docker image for the model pipeline has already been built, you can skip this step.
+
+```bash
+docker build -f Dockerfile -t airbnbchi .
 ```
-where `HOME` is the root directory. The `DATBASE_PATH` should be an **absolute path**, not a relative path.
 
+Step 2: Run the tests
+
+```bash
+docker run airbnbchi tests_all
+```
+
+You can create a `test` Docker container by specifying `--name test` after the `docker run` command.
 
 ----
 
-## Setup
+## Addendum: Configurations
 
 ### 1. Configure environment variables
+
+Two sets of environment variables are required to run the model pipeline and the web application using an RDS database:
+
+1. AWS credentials for the model pipeline, to upload / download files from S3:
+    - `AWS_SECRET_ACCESS_KEY`
+    - `AWS_ACCESS_KEY_ID`
+2. MySQL credentials for the web application, to store user data in an RDS database:
+    - `MYSQL_USER`
+    - `MYSQL_PASSWORD`
+    - `MYSQL_HOST`
+    - `MYSQL_PORT`
+    - `MYSQL_DATABASE`  
+
+If MySQL credentials are not exported as environment variables, the application will create a local SQLite database.
 
 **Running locally**
 
@@ -270,14 +301,9 @@ export MYSQL_PORT=<your-MySQL-port>
 
 **Running in Docker**
 
-Create a file called `config.env` file within the `config/` path. This file will contain your AWS credentials to access the S3 bucket, as well as your MySQL credentials for accessing the RDS table. The following environment variables will be exported to the Docker container when the scripts are executed:
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_ACCESS_KEY_ID`
-- `MYSQL_USER`
-- `MYSQL_PASSWORD`
-- `MYSQL_HOST`
-- `MYSQL_PORT`
-- `MYSQL_DATABASE`
+The environment variables can be exported in the `docker run` command via the `-e VAR=val` flag for each environment variable (see [Running Model Pipeline](#running-model-pipeline) in Docker).
+
+Alternatively create a file called `config.env` file within the `config/` path to store the environment variables, which will be exported to the Docker container when the scripts are executed:
 
 To create the `config.env` file, from the root directory, run:
 ```bash
@@ -297,11 +323,13 @@ MYSQL_PORT=<your-MySQL-port>
 MYSQL_DATABASE=<your-MySQL-database-name>
 ```
 
-### 2. Configure database (optional)
+Then, add `--env-file=config/config.env` after the applicable `docker run` statement to export the environment variables Docker.
 
-**RDS**
+### 2. Configure database connection string
 
-As outlied above, set the database name using the `MYSQL_DATABASE` variable in the `config/config.env` file. If this field is empty, the default database name is `airbnbchi_db`. This default can be modified in the `config.py` script:
+**RDS Using MySQL**
+
+The default database name is `airbnbchi_db`. This default can be modified in the `config.py` script:
 ```python
 if DATABASE is None:
     DATABASE = "airbnbchi_db"  # Default RDS database
@@ -309,92 +337,143 @@ if DATABASE is None:
 
 **Local SQLite**
 
-To change the local filepath where the SQLite database is created, modify `DATABASE_PATH` variable in the `config.py` file. Default location is:
+To change the *default* local file path where the SQLite database is created, modify `DATABASE_PATH` variable in the `config.py` file. Default location is:
 ```python
 DATABASE_PATH = HOME / "data" / "airbnbchi.db"
 ```
-where `HOME` is the root directory. The `DATBASE_PATH` should be an **absolute path**, not a relative path.
+where `HOME` is the root of the directory. The `DATBASE_PATH` should be an **absolute path**, not a relative path.
 
+### 3. Configure S3 bucket
 
-## Running the Model Pipeline
+To change the *default* S3 bucket for which files are uploaded and downloaded from, modify the `S3_BUCKET` variable in `config.py`. The S3 bucket specification can also be passed in as a command line argument (see [Ingest data from source and upload to S3 bucket](#1-ingest-data-from-source-and-upload-to-s3-bucket))
+
+----
+
+## Addendum: Running Model Pipeline Individual Steps
 
 All scripts should be executed by running `python run.py <arg>` in the root of the repository, where `<arg>` specifies the step in the model pipeline to execute. Details on the pipeline and arguments to pass are below.
 
-### 1. Initialize the database schema
-
-To create the database (default location is RDS), run:
-```bash
-python run.py create_db
-```
-To create the database locally, add argument `--local=True`
-```bash
-python run.py create_db --local=True
-```
-
-### 2. Ingest data from source and upload to S3 bucket
+### 1. Ingest data from source and upload to S3 bucket
 
 To import data from the source URL (source [here](http://insideairbnb.com/get-the-data.html)), run:
 ```bash
 python run.py ingest
 ```
+Optional argument flags / configurations:
+- `--s3_bucket_name`: to specify the S3 bucket to upload raw data to
 
-The S3 bucket location and object name can be configured by `S3: S3_BUCKET` and `S3: S3_OBJECT` in the `config/modelconfig.yml` file.
-
-### 3. Clean raw data
+### 2. Clean raw data
 
 To clean and pre-process the raw data file, run:
 ```bash
 python run.py clean
 ```
-The clean data CSV file will be saved locally in the `data/` folder. 
+The clean data CSV file will by default be saved locally in the `/data` folder. 
 
-To delete the raw data file from the local folder, add `--keep_raw=False`
-```bash
-python run.py clean --keep_raw=False
-```
+Optional argument flags / configurations
+- `--s3_bucket_name`: to specify the S3 bucket to download raw data frome
+- `--output`: to specify the file path + name where the cleaned data file will be output
+- `--keep_raw=False` to delete the raw data file
 
-### 4. Generate and select features
+### 3. Generate and select features
 
 To generate and select features in preparation for model training, run:
 ```bash
 python run.py features
 ```
-A CSV file containing the selected features and target variable will be saved locally in the `data/` folder. This data will be loaded to the database.
+A CSV file containing the selected features and target variable will by default be saved locally in the `/data` folder. 
 
-## Running the Model Pipeline in Docker (Optional)
+Optional argument flags / configurations
+- `--input`: to specify the file path + name of the cleaned data file
+- `--output`: to specify the file path + name where the features file will be output
+
+### 4. Train model and create model artifacts
+
+To created the trained model objects, model artifacts (e.g., encoders, scalers), and results, run:
+```bash
+python run.py train
+```
+The trained model object, encoder, and scalers PKL files will by default be saved locally in the `models/` folder.
+
+Optional argument flags / configurations
+- `--input`: to specify the file path + name of the features CSV file
+- `--output`: to specify the file path where the model artifacts are output. Must be a folder path and not file name.
+- `--use_existing_params` (default True): to specify whether to use existing hyperparameter settings in the `config/modelconfig.yml` file or whether to tune hyperparameters via random grid search. Strongly suggest keeping this argument True, since tuning may take a while.
+- `--upload` (default False): to specify whether to upload model artifacts to S3
+- `--s3_bucket_name`: to specify the S3 bucket to upload model artifacts to, if `--upload=True`
+
+## Addendum: Running Model Pipeline Individual Steps in Docker
 
 ### 1. Build the Docker image
 
-The Dockerfile for running the flask app is in the `app/` folder. To build the image, run from this directory (the root of the repo): 
 ```bash
- docker build -f app/Dockerfile -t airbnbchi .
+ docker build -f Dockerfile -t airbnbchi .
 ```
-This command builds the Docker image, with the tag `airbnbchi`, based on the instructions in `app/Dockerfile` and the files existing in this directory.
+This command builds the Docker image, with the tag `airbnbchi`, based on the instructions in `Dockerfile` and the files existing in this directory.
 
 ### 2. Run model pipeline scripts
 
-First, ensure that the `config.env` file is created in the `config/` path. Instructions for creating this file are referenced in the section [Configure environment variables](#1-configure-environment-variables).
+Note: ensure data has first been ingested and uploaded to the S3 bucket.
 
-To run the model pipeline scripts, run:
+To use the `config.env`, ensure that the `config.env` file is created in the `config/` path. Instructions for creating this file are referenced in the section [Configure environment variables](#1-configure-environment-variables).
+
+The `docker run` commands for each step of the model pipeline are:
+
 ```bash
-docker run --env-file=config/config.env airbnbchi run.py <pipeline_arg> --optional_args
-```
-The `pipeline_arg` is the argument that specifies which step of the pipeline to execute. For example, to create the database, run:
-```bash
-docker run --env-file=config/config.env airbnbchi run.py create_db
-```
-Refer to [Running the Model Pipeline](#running-the-model-pipeline) section for the arguments to pass in when executing the `run.py` script.
+# Clean
+docker run --env-file=config/config.env --mount type=bind,source=$(pwd)/data,target=/app/data airbnbchi data/listings-clean.csv
 
-**Persisting data files and SQLite database locally**
+# Generate features
+docker run --mount type=bind,source=$(pwd)/data,target=/app/data airbnbchi data/features.csv
 
-To persist the data files and databases locally, include `--mount type=bind,source=$(pwd)/data,target=/app/data` in the `docker run` statement. 
-
-For example, to save the SQLite database locally, run:
-```bash
-docker run --env-file=config/config.env --mount type=bind,source=$(pwd)/data,target=/app/data airbnbchi run.py create_db --local=True
+# Train model
+docker run --env-file=config/config.env --mount type=bind,source=$(pwd)/data,target=/app/models airbnbchi models
 ```
 
-## Running MySQL in Command Line (Optional)
+Note the --env-file flag is only needed for functions that require interaction with S3. Alternatively, instead of using an `.env` file, you can pass each environment variable in the `docker run` command. See [Configure environment variables](#1-configure-environment-variables)
+
+Refer to [Addendum: Running Model Pipeline Individual Steps](#addendum-running-model-pipeline-individual-steps) section for the arguments to pass in when executing the `run.py` script.
+
+The `--mount type=bind,source=$(pwd)/data,target=/app/data` is used to persist the files locally while running in Docker. 
+
+----
+
+## Addendum: Running Unit Test Individual Steps
+
+All test scripts are located in the `/test` folder and should be executed by running `pytest test/<test_script.py>` in the root of the repository, where `<test_script.py>` specifies the unit test script execute.
+
+Run the following commands to individually unit test each `src` script.
+
+```bash
+pytest test/test_ingest_data.py
+pytest test/test_clean_data.py
+pytest test/test_generate_features.py
+pytest test/test_train_model.py
+pytest test/test_predict.py
+```
+
+## Addendum: Running Unit Test Individual Steps in Docker
+
+### 1. Build the Docker image
+
+```bash
+ docker build -f Dockerfile -t airbnbchi .
+```
+This command builds the Docker image, with the tag `airbnbchi`, based on the instructions in `Dockerfile` and the files existing in this directory.
+
+### 2. Execute the test scripts
+
+```bash
+docker run airbnbchi test_ingest_data
+docker run airbnbchi test_clean_data
+docker run airbnbchi test_generate_features
+docker run airbnbchi test_train_model
+docker run airbnbchi test_predict
+```
+
+----
+
+## Addendum: Running MySQL in Command Line (Optional)
 
 Once the RDS table has been created, you can access the database via MySQL in the command line. 
 
