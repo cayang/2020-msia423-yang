@@ -66,7 +66,7 @@ if __name__ == "__main__":
     sb_ingest.add_argument(
         "--data_path",
         default=config.DATA_PATH,
-        help="Location of the data folder on local where the raw file will be downloaded.",
+        help="Location of the data folder on local where the raw file will be downloaded. String type.",
     )
 
     # Sub-parser for cleaning data
@@ -150,7 +150,7 @@ if __name__ == "__main__":
         "--output",
         "-o",
         default=None,
-        help="File path to save output model artifacts pkl files. Must be an absolute folder path, not filename.",
+        help="File path to save output model artifacts pkl files. Must be a folder path, not filename.",
     )
     sb_train.add_argument(
         "--use_existing_params",
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     sb_train.add_argument(
         "--upload",
         "-u",
-        default=True,
+        default=False,
         type=bool,
         help="Specifies whether to upload trained model object and artifacts to S3 bucket.",
     )

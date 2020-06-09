@@ -102,6 +102,7 @@ def create_db(engine_string):
     session = Session()
     session.commit()
     session.close()
+    logger.info("listings table created.")
 
 
 def _truncate_listings(engine_string):
@@ -117,3 +118,4 @@ def _truncate_listings(engine_string):
     session.execute("""DELETE FROM listings""")
     session.commit()
     session.close()
+    logger.info("listings table removed.")

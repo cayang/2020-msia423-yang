@@ -76,18 +76,18 @@ def import_data_from_source(url, zip_filename, input_filepath, output_filename):
         r = requests.get(url)
 
         # Write out raw file
-        with open(input_filepath / zip_filename, "wb") as f:
+        with open("".join([input_filepath, "/", zip_filename]), "wb") as f:
             f.write(r.content)
         logger.info("Successfully downloaded raw data from {}.".format(url))
 
         # Unzip file and write raw data to CSV
-        with gzip.open(input_filepath / zip_filename) as f:
+        with gzip.open("".join([input_filepath, "/", zip_filename])) as f:
             file = pd.read_csv(f, low_memory=False)
             file.to_csv(
                 output_filename, index=False,
             )
             # Remove zipped file
-            os.remove(input_filepath / zip_filename)
+            os.remove("".join([input_filepath, "/", zip_filename]))
         logger.info(
             "Successfully unzipped raw data file and extracted CSV file to {}.".format(
                 input_filepath

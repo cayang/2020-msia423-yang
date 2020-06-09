@@ -2,6 +2,7 @@ import os
 import sys
 import pathlib
 import pandas as pd
+import re
 import boto3
 import logging
 import logging.config
@@ -89,12 +90,12 @@ def run_clean_data(args):
 
     # Export clean data to CSV
     if args.output is None:
-        df.to_csv(data_files["DATA_FILENAME_CLEAN"])
+        df.to_csv(data_files["DATA_FILENAME_CLEAN"], index=False)
         logger.info(
             "Exported cleaned data file to {}".format(data_files["DATA_FILENAME_CLEAN"])
         )
     else:
-        df.to_csv(args.output)
+        df.to_csv(args.output, index=False)
         logger.info("Exported cleaned data file to {}".format(args.output))
 
     # Remove raw data from local if specified
@@ -236,7 +237,11 @@ def convert_variable_types(df):
 def standardize_zipcode(zip):
     """Return 5 digit zip code"""
 
-    return zip[0:5]
+    try:
+        return zip[0:5]
+    except Exception as e:
+        logger.error("Encountered error when trying to parse zip code.")
+        logger.error(e)
 
 
 def convert_price(price):
@@ -248,7 +253,11 @@ def convert_price(price):
     if price.find(",") != -1:
         price = price.replace(",", "")
 
-    return float(price)
+    try:
+        return round(float(price), 2)
+    except Exception as e:
+        logger.error("Encountered error when trying to convert price.")
+        logger.error(e)
 
 
 def convert_percentage(pct):
@@ -257,4 +266,8 @@ def convert_percentage(pct):
     if pct[-1] == "%":
         pct = pct[:-1]
 
-    return float(pct) / 100
+    try:
+        return round(float(pct) / 100, 2)
+    except Exception as e:
+        logger.error("Encountered error when trying to convert percentage.")
+        logger.error(e)
