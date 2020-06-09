@@ -55,7 +55,7 @@ Data source: [Airbnb listing-level data](http://insideairbnb.com/get-the-data.ht
   - Story 1: Develop scripts that ingest data from source and produce raw data files - COMPLETE
   - Story 2: Develop scripts that create local database schema - COMPLETE
   - Story 3: Integrate data pipeline with feature pipeline and model training process - COMPLETE
-  - Story 4: Conduct appropriate tests to ensure performance is as expected - PLANNED
+  - Story 4: Conduct appropriate tests to ensure performance is as expected - COMPLETE
 - **Epic 2**: Optimize Data Pipeline with Alternative Acquisition and Storage
   - Story 1: (Specific tasks to be further defined at a later time) - ICEBOX
 
@@ -70,7 +70,7 @@ Data source: [Airbnb listing-level data](http://insideairbnb.com/get-the-data.ht
 - Initiative2.epic1.story1 (large) - COMPLETE
 - Initiative2.epic1.story2 (medium) - COMPLETE
 - Initiative2.epic1.story3 (medium) - COMPLETE
-- Initiative2.epic1.story4 (medium) - PLANNED
+- Initiative2.epic1.story4 (medium) - COMPLETE
  
 Sizing: small < medium < large < big
 
