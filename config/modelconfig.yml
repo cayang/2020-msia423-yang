@@ -22,9 +22,11 @@ model_files:
     MODEL_FILENAME_TMO: models/model.pkl
     MODEL_FILENAME_ENCODER: models/encoder.pkl
     MODEL_FILENAME_SCALERS: models/scalers.pkl
+    MODEL_FILENAME_METRICS: models/metrics.csv
 
 # Model pipeline configs
 TARGET_COL: reviews_per_month
+seed: 423
 ingest_data:
     ZIP_FILE_NAME: listings.csv.gz
 clean_data:

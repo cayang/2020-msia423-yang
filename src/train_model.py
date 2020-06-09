@@ -64,12 +64,14 @@ def run_train_model(args):
             COLS_CAT = config["train_model"]["COLS_CAT"]
 
             # Model object settings
+            seed = config["seed"]
             iter_imp_settings = config["train_model"]["iter_imp_settings"]
             train_test_settings = config["train_model"]["train_test_settings"]
             tuning_param_settings = config["train_model"]["tuning_param_settings"]
             grid_search_settings = config["train_model"]["grid_search_settings"]
             voting_model_settings = config["train_model"]["voting_model_settings"]
             tuned_params = config["train_model"]["tuned_params"]
+
     except KeyError:
         logger.error(
             "Encountered error when assigning variable from configurations file."
@@ -78,6 +80,9 @@ def run_train_model(args):
     except (FileNotFoundError, IOError):
         logger.error("Encountered error in reading in the configurations file.")
         sys.exit(1)
+
+    # Set seed for XGB reproducibility
+    np.random.seed(seed)
 
     # Read in features dataset
     if args.input is None:
@@ -115,7 +120,7 @@ def run_train_model(args):
 
     # Develop trained model object
     logger.info("Training model and obtaining model artifacts.")
-    tmo, stdscaler, minmaxscaler = get_trained_model_object(
+    tmo, stdscaler, minmaxscaler, metrics = get_trained_model_object(
         df_model,
         TARGET_COL,
         train_test_settings,
@@ -134,10 +139,12 @@ def run_train_model(args):
         model_file_tmo = model_files["MODEL_FILENAME_TMO"]
         model_file_encoder = model_files["MODEL_FILENAME_ENCODER"]
         model_file_scalers = model_files["MODEL_FILENAME_SCALERS"]
+        model_file_metrics = model_files["MODEL_FILENAME_METRICS"]
     else:
         model_file_tmo = pathlib.Path(args.output) / "model.pkl"
         model_file_encoder = pathlib.Path(args.output) / "encoders.pkl"
         model_file_scalers = pathlib.Path(args.output) / "scalers.pkl"
+        model_file_metrics = pathlib.Path(args.output) / "metrics.csv"
 
     with open(model_file_tmo, "wb") as file:
         logger.info("Writing trained model object to {}.".format(model_file_tmo))
@@ -148,9 +155,12 @@ def run_train_model(args):
     with open(model_file_scalers, "wb") as file:
         logger.info("Writing scaler objects to {}.".format(model_file_scalers))
         pkl.dump((stdscaler, minmaxscaler), file)
+    if metrics is not None:
+        logger.info("Writing metrics to {}.".format(model_file_metrics))
+        metrics.to_csv(model_file_metrics, index=False)
 
-    # Upload to S3 if chosen
-    if args.upload:
+    # Upload model artifacts to S3 if chosen
+    if args.upload == True:
         logger.info(
             "Uploading model artifacts to S3 bucket {}.".format(args.s3_bucket_name)
         )
@@ -217,15 +227,13 @@ def get_imputed_values(df, dummy_cols, settings, host_response_map):
         )
         df = df.drop(columns="host_response_time")
 
-    # Set imputer settings to impute host_response_rate and host_response_time_code
-    logger.debug("Setting iterative imputer with settings {}.".format(settings))
-    imp = IterativeImputer(**settings)
-
-    # Get column names
-    colnames = df.columns.tolist()
-
-    # Final imputed dataframe, excluding response variable)
     try:
+        # Set imputer settings to impute host_response_rate and host_response_time_code
+        logger.debug("Setting iterative imputer with settings {}.".format(settings))
+        imp = IterativeImputer(**settings)
+
+        # Get column names
+        colnames = df.columns.tolist()
         df_imp = pd.DataFrame(imp.fit_transform(df), columns=colnames)
 
         # Round the imputed values
@@ -253,7 +261,7 @@ def get_imputed_values(df, dummy_cols, settings, host_response_map):
     except Exception as e:
         logger.error("Encountered error when applying Iterative Imputer.")
         logger.error(e)
-        return None
+        return df
 
 
 def encode_variables(df, cols):
@@ -442,7 +450,7 @@ def get_trained_model_object(
     # Evaluate all models
     logger.info("Evaluating models {}.".format(models_all))
     for model in models_all:
-        evaluate_model(model, X_train, X_test, y_train, y_test)
+        _ = evaluate_model(model, X_train, X_test, y_train, y_test)
 
     # Ensemble models into voting model and evaluate
     logger.info("Ensembling models.")
@@ -459,7 +467,7 @@ def get_trained_model_object(
         logger.debug("Settings for voting model: {}".format(voting_model_settings))
         ereg = VotingRegressor(**voting_model_settings)
         ereg.fit(X_train, y_train)
-        evaluate_model(ereg, X_train, X_test, y_train, y_test)
+        metrics = evaluate_model(ereg, X_train, X_test, y_train, y_test)
 
         # Final TMO using all data
         ereg.fit(X, y)
@@ -468,7 +476,7 @@ def get_trained_model_object(
     stdscaler.fit(X[cols_num_std])
     minmaxscaler.fit(X[cols_num_minmax])
 
-    return ereg, stdscaler, minmaxscaler
+    return ereg, stdscaler, minmaxscaler, metrics
 
 
 def tune_model_grid_search(model, X_train, y_train, grid, grid_settings):
@@ -534,13 +542,20 @@ def evaluate_model(model, X_train, X_test, y_train, y_test):
         rmse = math.sqrt(mean_squared_error(pred_test, y_test))
 
         logger.info("Performance metrics obtained for {} model.".format(model))
-        print("Train R2:", train_r2)
-        print("Test R2:", test_r2)
-        print("RMSE:", rmse)
+        logger.info("Train R2: {}".format(train_r2))
+        logger.info("Test R2: {}".format(test_r2))
+        logger.info("Test RMSE: {}".format(rmse))
+
+        df_metrics = pd.DataFrame(
+            {"Train R2": train_r2, "Test R2": test_r2, "Test RMSE": rmse},
+            index=np.arange(0, 1),
+        )
+
+        return df_metrics
 
     except Exception as e:
         logger.error(
             "Encountered error whle predicting on the test set and getting performance metrics."
         )
         logger.error(e)
-        pass
+        return None

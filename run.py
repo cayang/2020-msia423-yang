@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
 
-    # Add parsers for all functions in the pipeline
+    # Add parsers for all functions in the pipeline and creating the database
     parser = argparse.ArgumentParser(description="Run model pipeline code")
     subparsers = parser.add_subparsers()
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     sb_ingest.add_argument(
         "--data_path",
         default=config.DATA_PATH,
-        help="Location of the data folder on local where the raw file will be downloaded.",
+        help="Location of the data folder on local where the raw file will be downloaded. Must be a file path.",
     )
 
     # Sub-parser for cleaning data
@@ -88,13 +88,13 @@ if __name__ == "__main__":
         "--input",
         "-i",
         default=None,
-        help="File name of the raw data file, if stored locally.",
+        help="File name of the raw data file, if stored locally. Must be a file name",
     )
     sb_clean.add_argument(
         "--output",
         "-o",
         default=None,
-        help="File name to save output cleaned data CSV file.",
+        help="File name to save output cleaned data CSV file. Must be a file name",
     )
     sb_clean.add_argument(
         "--keep_raw",
@@ -117,13 +117,16 @@ if __name__ == "__main__":
         help="Location of YAML file containing configurations for running model pipeline.",
     )
     sb_features.add_argument(
-        "--input", "-i", default=None, help="File name of the clean data file.",
+        "--input",
+        "-i",
+        default=None,
+        help="File name of the clean data file. Must be a file name.",
     )
     sb_features.add_argument(
         "--output",
         "-o",
         default=None,
-        help="File name to save output features data CSV file.",
+        help="File name to save output features data CSV file. Must be a file name.",
     )
     sb_features.add_argument(
         "--pull_date",
@@ -144,13 +147,16 @@ if __name__ == "__main__":
         help="Location of YAML file containing configurations for running model pipeline.",
     )
     sb_train.add_argument(
-        "--input", "-i", default=None, help="File name of the features data file.",
+        "--input",
+        "-i",
+        default=None,
+        help="File name of the features data file. Must be a file name",
     )
     sb_train.add_argument(
         "--output",
         "-o",
         default=None,
-        help="File path to save output model artifacts pkl files. Must be an absolute folder path, not filename.",
+        help="File path to save output model artifacts pkl files. Must be a folder path, not filename.",
     )
     sb_train.add_argument(
         "--use_existing_params",
@@ -162,7 +168,7 @@ if __name__ == "__main__":
     sb_train.add_argument(
         "--upload",
         "-u",
-        default=True,
+        default=False,
         type=bool,
         help="Specifies whether to upload trained model object and artifacts to S3 bucket.",
     )
